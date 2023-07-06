@@ -15,21 +15,24 @@ pragma solidity 0.8.19;
  * - To load data, or erase data and get all gas refund, data length is always required.
  */
 library FixedSizeData {
-
     /**
      * @dev Store data to the slot at `slot`
      */
     function storeData(bytes32 slot, bytes32[] memory data) internal {
         for (uint j = 0; j < data.length; ++j) {
             bytes32 d = data[j];
-            assembly { sstore(add(slot, j), d) }
+            assembly {
+                sstore(add(slot, j), d)
+            }
         }
     }
 
     function hasData(bytes32 slot, uint dataLength) internal view returns (bool) {
         for (uint j = 0; j < dataLength; ++j) {
             bytes32 d;
-            assembly { d := sload(add(slot, j)) }
+            assembly {
+                d := sload(add(slot, j))
+            }
             if (uint256(d) > 0) return true;
         }
         return false;
@@ -42,7 +45,9 @@ library FixedSizeData {
         data = new bytes32[](dataLength);
         for (uint j = 0; j < dataLength; ++j) {
             bytes32 d;
-            assembly { d := sload(add(slot, j)) }
+            assembly {
+                d := sload(add(slot, j))
+            }
             data[j] = d;
         }
     }
@@ -52,8 +57,9 @@ library FixedSizeData {
      */
     function eraseData(bytes32 slot, uint dataLength) internal {
         for (uint j = 0; j < dataLength; ++j) {
-            assembly { sstore(add(slot, j), 0) }
+            assembly {
+                sstore(add(slot, j), 0)
+            }
         }
     }
-
 }

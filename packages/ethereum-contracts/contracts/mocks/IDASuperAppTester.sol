@@ -1,18 +1,10 @@
 // SPDX-License-Identifier: AGPLv3
 pragma solidity 0.8.19;
 
-import {
-    ISuperfluid,
-    ISuperToken,
-    ISuperApp
-} from "../superfluid/Superfluid.sol";
-import {
-    IInstantDistributionAgreementV1
-} from "../interfaces/agreements/IInstantDistributionAgreementV1.sol";
-
+import { ISuperfluid, ISuperToken, ISuperApp } from "../superfluid/Superfluid.sol";
+import { IInstantDistributionAgreementV1 } from "../interfaces/agreements/IInstantDistributionAgreementV1.sol";
 
 contract IDASuperAppTester is ISuperApp {
-
     ISuperfluid private _host;
     IInstantDistributionAgreementV1 private _ida;
     ISuperToken private _token;
@@ -23,8 +15,8 @@ contract IDASuperAppTester is ISuperApp {
         uint256 configWord,
         IInstantDistributionAgreementV1 ida,
         ISuperToken token,
-        uint32 indexId)
-    {
+        uint32 indexId
+    ) {
         _host = host;
         _host.registerAppWithKey(configWord, "");
         _ida = ida;
@@ -45,12 +37,7 @@ contract IDASuperAppTester is ISuperApp {
         );
     }
 
-    function updateSubscription(
-        address subscriber,
-        uint128 units
-    )
-        external
-    {
+    function updateSubscription(address subscriber, uint128 units) external {
         _host.callAgreement(
             _ida,
             abi.encodeCall(
@@ -67,11 +54,7 @@ contract IDASuperAppTester is ISuperApp {
         );
     }
 
-    function distribute(
-        uint128 amount
-    )
-        external
-    {
+    function distribute(uint128 amount) external {
         _host.callAgreement(
             _ida,
             abi.encodeCall(
@@ -87,63 +70,42 @@ contract IDASuperAppTester is ISuperApp {
         );
     }
 
-    function _expectCallback(
-        bytes calldata ctx,
-        bytes32 callbackType,
-        bytes calldata agreementData
-    )
-        private view
-    {
+    function _expectCallback(bytes calldata ctx, bytes32 callbackType, bytes calldata agreementData) private view {
         ISuperfluid.Context memory context = ISuperfluid(msg.sender).decodeCtx(ctx);
         bytes32 expectedCallbackType;
         bytes4 expectedSelector;
         bytes memory expectedAgreementData;
-        (
-            expectedCallbackType,
-            expectedSelector,
-            expectedAgreementData
-        ) = abi.decode(context.userData, (bytes32, bytes4, bytes));
+        (expectedCallbackType, expectedSelector, expectedAgreementData) =
+            abi.decode(context.userData, (bytes32, bytes4, bytes));
         require(expectedCallbackType == callbackType, "wrong callbackType");
         require(expectedSelector == context.agreementSelector, "wrong agreementSelector");
         require(keccak256(expectedAgreementData) == keccak256(agreementData), "wrong aAgreementData");
     }
 
     event SubscriptionDataBefore(
-        address publisher,
-        uint32 indexId,
-        bool approved,
-        uint128 units,
-        uint256 pendingDistribution);
+        address publisher, uint32 indexId, bool approved, uint128 units, uint256 pendingDistribution
+    );
     event SubscriptionDataAfter(
-        address publisher,
-        uint32 indexId,
-        bool approved,
-        uint128 units,
-        uint256 pendingDistribution);
-    function _packSubscriptionData(bytes32 agreementId) private view returns (bytes memory){
+        address publisher, uint32 indexId, bool approved, uint128 units, uint256 pendingDistribution
+    );
+
+    function _packSubscriptionData(bytes32 agreementId) private view returns (bytes memory) {
         address publisher;
         uint32 indexId;
         bool approved;
         uint128 units;
         uint256 pendingDistribution;
-        (
-            publisher,
-            indexId,
-            approved,
-            units,
-            pendingDistribution
-        ) = _ida.getSubscriptionByID(_token, agreementId);
+        (publisher, indexId, approved, units, pendingDistribution) = _ida.getSubscriptionByID(_token, agreementId);
         return abi.encode(publisher, indexId, approved, units, pendingDistribution);
     }
 
     bool private _forceGetSubscriptionByID = false;
+
     function setForceGetSubscriptionByID() external {
         _forceGetSubscriptionByID = true;
     }
 
-    function _emitSubscriptionDataEvents(bytes memory cbdata, bytes32 agreementId, bool deleted)
-        private
-    {
+    function _emitSubscriptionDataEvents(bytes memory cbdata, bytes32 agreementId, bool deleted) private {
         address publisher;
         uint32 indexId;
         bool approved;
@@ -151,24 +113,13 @@ contract IDASuperAppTester is ISuperApp {
         uint256 pendingDistribution;
 
         if (cbdata.length > 0) {
-            (
-                publisher,
-                indexId,
-                approved,
-                units,
-                pendingDistribution
-            ) = abi.decode(cbdata, (address, uint32, bool, uint128, uint256));
+            (publisher, indexId, approved, units, pendingDistribution) =
+                abi.decode(cbdata, (address, uint32, bool, uint128, uint256));
             emit SubscriptionDataBefore(publisher, indexId, approved, units, pendingDistribution);
         }
 
         if (!deleted) {
-            (
-                publisher,
-                indexId,
-                approved,
-                units,
-                pendingDistribution
-            ) = _ida.getSubscriptionByID(_token, agreementId);
+            (publisher, indexId, approved, units, pendingDistribution) = _ida.getSubscriptionByID(_token, agreementId);
             emit SubscriptionDataAfter(publisher, indexId, approved, units, pendingDistribution);
         }
     }
@@ -180,10 +131,12 @@ contract IDASuperAppTester is ISuperApp {
         bytes calldata agreementData,
         bytes calldata ctx
     )
-        external view
+        external
+        view
+        virtual
+        override
         requireValidCtx(ctx)
         onlyExpected(superToken, agreementClass)
-        virtual override
         returns (bytes memory cbdata)
     {
         _expectCallback(ctx, keccak256("created"), agreementData);
@@ -202,9 +155,10 @@ contract IDASuperAppTester is ISuperApp {
         bytes calldata ctx
     )
         external
+        virtual
+        override
         requireValidCtx(ctx)
         onlyExpected(superToken, agreementClass)
-        virtual override
         returns (bytes memory newCtx)
     {
         _expectCallback(ctx, keccak256("created"), agreementData);
@@ -219,11 +173,13 @@ contract IDASuperAppTester is ISuperApp {
         bytes calldata agreementData,
         bytes calldata ctx
     )
-        external view
+        external
+        view
+        virtual
+        override
         requireValidCtx(ctx)
         onlyExpected(superToken, agreementClass)
-        virtual override
-        returns (bytes memory /*cbdata*/)
+        returns (bytes memory /*cbdata*/ )
     {
         _expectCallback(ctx, keccak256("updated"), agreementData);
         return _packSubscriptionData(agreementId);
@@ -238,9 +194,10 @@ contract IDASuperAppTester is ISuperApp {
         bytes calldata ctx
     )
         external
+        virtual
+        override
         requireValidCtx(ctx)
         onlyExpected(superToken, agreementClass)
-        virtual override
         returns (bytes memory newCtx)
     {
         _expectCallback(ctx, keccak256("updated"), agreementData);
@@ -255,11 +212,13 @@ contract IDASuperAppTester is ISuperApp {
         bytes calldata agreementData,
         bytes calldata ctx
     )
-        external view
+        external
+        view
+        virtual
+        override
         requireValidCtx(ctx)
         onlyExpected(superToken, agreementClass)
-        virtual override
-        returns (bytes memory /*cbdata*/)
+        returns (bytes memory /*cbdata*/ )
     {
         _expectCallback(ctx, keccak256("deleted"), agreementData);
         return _packSubscriptionData(agreementId);
@@ -274,9 +233,10 @@ contract IDASuperAppTester is ISuperApp {
         bytes calldata ctx
     )
         external
+        virtual
+        override
         requireValidCtx(ctx)
         onlyExpected(superToken, agreementClass)
-        virtual override
         returns (bytes memory newCtx)
     {
         _expectCallback(ctx, keccak256("deleted"), agreementData);

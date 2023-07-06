@@ -5,14 +5,18 @@ import { ISuperToken } from "./ISuperToken.sol";
 import { IFlowNFTBase } from "./IFlowNFTBase.sol";
 
 interface IConstantInflowNFT is IFlowNFTBase {
-    /**************************************************************************
+    /**
+     *
      * Custom Errors
-     *************************************************************************/
+     *
+     */
     error CIF_NFT_ONLY_CONSTANT_OUTFLOW(); // 0xe81ef57a
 
-    /**************************************************************************
+    /**
+     *
      * Write Functions
-     *************************************************************************/
+     *
+     */
 
     /// @notice The mint function emits the "mint" `Transfer` event.
     /// @dev We don't modify storage as this is handled in ConstantOutflowNFT.sol and this function's sole purpose

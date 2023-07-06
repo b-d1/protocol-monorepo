@@ -8,33 +8,24 @@ import { ISuperAgreement } from "../interfaces/superfluid/ISuperfluid.sol";
 
 contract StreamRedirector is SuperAppBase {
     using CFAv1Library for CFAv1Library.InitData;
+
     CFAv1Library.InitData public cfaV1;
     ISuperfluid public host;
-    bytes32 public constant CFA_ID =
-        keccak256("org.superfluid-finance.agreements.ConstantFlowAgreement.v1");
+    bytes32 public constant CFA_ID = keccak256("org.superfluid-finance.agreements.ConstantFlowAgreement.v1");
     address public receiver; // flow is redirected to hardcoded receiver address
     ISuperToken public token; // accepted super token
 
-    constructor(
-        ISuperfluid _host,
-        ISuperToken _token,
-        address _receiver,
-        uint256 _appLevel
-    ) {
+    constructor(ISuperfluid _host, ISuperToken _token, address _receiver, uint256 _appLevel) {
         assert(address(_token) != address(0));
         assert(address(_receiver) != address(0));
         assert(address(_host) != address(0));
 
         host = _host;
 
-        cfaV1 = CFAv1Library.InitData(
-            host,
-            IConstantFlowAgreementV1(address(host.getAgreementClass(CFA_ID)))
-        );
+        cfaV1 = CFAv1Library.InitData(host, IConstantFlowAgreementV1(address(host.getAgreementClass(CFA_ID))));
 
-        uint256 configWord = _appLevel |
-            SuperAppDefinitions.BEFORE_AGREEMENT_CREATED_NOOP |
-            SuperAppDefinitions.BEFORE_AGREEMENT_TERMINATED_NOOP;
+        uint256 configWord = _appLevel | SuperAppDefinitions.BEFORE_AGREEMENT_CREATED_NOOP
+            | SuperAppDefinitions.BEFORE_AGREEMENT_TERMINATED_NOOP;
 
         token = _token;
         receiver = _receiver;
@@ -56,12 +47,7 @@ contract StreamRedirector is SuperAppBase {
      * @param _flowRate desired flow rate
      */
     function startStreamToSelf(address _originAccount, int96 _flowRate) public {
-        cfaV1.createFlowByOperator(
-            _originAccount,
-            address(this),
-            token,
-            _flowRate
-        );
+        cfaV1.createFlowByOperator(_originAccount, address(this), token, _flowRate);
     }
 
     /**
@@ -110,12 +96,7 @@ contract StreamRedirector is SuperAppBase {
     {
         newCtx = _ctx;
         int96 netFlowRate = cfaV1.cfa.getNetFlow(_superToken, address(this));
-        newCtx = cfaV1.createFlowWithCtx(
-            newCtx,
-            receiver,
-            _superToken,
-            netFlowRate
-        );
+        newCtx = cfaV1.createFlowWithCtx(newCtx, receiver, _superToken, netFlowRate);
     }
 
     function afterAgreementTerminated(
@@ -131,19 +112,10 @@ contract StreamRedirector is SuperAppBase {
         }
 
         newCtx = _ctx;
-        (, int96 currentFlowRate, , ) = cfaV1.cfa.getFlow(
-            _superToken,
-            address(this),
-            receiver
-        );
+        (, int96 currentFlowRate,,) = cfaV1.cfa.getFlow(_superToken, address(this), receiver);
 
         if (currentFlowRate > 0) {
-            newCtx = cfaV1.deleteFlowWithCtx(
-                newCtx,
-                address(this),
-                receiver,
-                _superToken
-            );
+            newCtx = cfaV1.deleteFlowWithCtx(newCtx, address(this), receiver, _superToken);
         }
     }
 
@@ -167,6 +139,7 @@ contract StreamRedirector is SuperAppBase {
         if (msg.sender != address(host)) revert OnlyHost();
         _;
     }
+
     modifier onlySupportedSuperToken(ISuperToken _superToken) {
         if (address(_superToken) != address(token)) revert UnsupportedToken();
         _;

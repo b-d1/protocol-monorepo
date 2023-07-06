@@ -6,7 +6,11 @@ import { UUPSProxiable } from "../../../contracts/upgradability/UUPSProxiable.so
 import { SuperTokenV1Library } from "../../../contracts/apps/SuperTokenV1Library.sol";
 import { FoundrySuperfluidTester } from "../FoundrySuperfluidTester.sol";
 import { SuperToken, SuperTokenMock } from "../../../contracts/mocks/SuperTokenMock.sol";
-import { PoolNFTBaseStorageLayoutMock, PoolAdminNFTStorageLayoutMock, PoolMemberNFTStorageLayoutMock } from "../../../contracts/mocks/PoolNFTUpgradabilityMock.sol";
+import {
+    PoolNFTBaseStorageLayoutMock,
+    PoolAdminNFTStorageLayoutMock,
+    PoolMemberNFTStorageLayoutMock
+} from "../../../contracts/mocks/PoolNFTUpgradabilityMock.sol";
 import { ConstantOutflowNFT, IConstantOutflowNFT } from "../../../contracts/superfluid/ConstantOutflowNFT.sol";
 import { ConstantInflowNFT, IConstantInflowNFT } from "../../../contracts/superfluid/ConstantInflowNFT.sol";
 import { TestToken } from "../../../contracts/utils/TestToken.sol";

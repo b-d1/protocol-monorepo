@@ -10,11 +10,11 @@ import { ISuperfluidToken } from "../superfluid/ISuperfluidToken.sol";
 interface ISuperfluidPool is IERC20 {
     // Custom Errors
 
-    error SUPERFLUID_POOL_INVALID_TIME();       // 0x83c35016
-    error SUPERFLUID_POOL_NO_POOL_MEMBERS();    // 0xe10f405a
+    error SUPERFLUID_POOL_INVALID_TIME(); // 0x83c35016
+    error SUPERFLUID_POOL_NO_POOL_MEMBERS(); // 0xe10f405a
     error SUPERFLUID_POOL_NO_ZERO_ADDRESS();
-    error SUPERFLUID_POOL_NOT_POOL_ADMIN();     // 0x7b0be922
-    error SUPERFLUID_POOL_NOT_GDA();            // 0xfcbe3f9e
+    error SUPERFLUID_POOL_NOT_POOL_ADMIN(); // 0x7b0be922
+    error SUPERFLUID_POOL_NOT_GDA(); // 0xfcbe3f9e
 
     // Events
     event MemberUpdated(ISuperfluidToken indexed token, address indexed member, uint128 units);

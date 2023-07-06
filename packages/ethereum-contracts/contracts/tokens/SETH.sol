@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: AGPLv3
 pragma solidity 0.8.19;
 
-import {
-    ISuperToken,
-    CustomSuperTokenBase
-}
-from "../interfaces/superfluid/CustomSuperTokenBase.sol";
+import { ISuperToken, CustomSuperTokenBase } from "../interfaces/superfluid/CustomSuperTokenBase.sol";
 import { ISETHCustom } from "../interfaces/tokens/ISETH.sol";
 import { UUPSProxy } from "../upgradability/UUPSProxy.sol";
 
@@ -25,12 +21,12 @@ contract SETHProxy is ISETHCustom, CustomSuperTokenBase, UUPSProxy {
         emit TokenUpgraded(msg.sender, msg.value);
     }
 
-    function upgradeByETH() external override payable {
+    function upgradeByETH() external payable override {
         ISuperToken(address(this)).selfMint(msg.sender, msg.value, new bytes(0));
         emit TokenUpgraded(msg.sender, msg.value);
     }
 
-    function upgradeByETHTo(address to) external override payable {
+    function upgradeByETHTo(address to) external payable override {
         ISuperToken(address(this)).selfMint(to, msg.value, new bytes(0));
         emit TokenUpgraded(to, msg.value);
     }

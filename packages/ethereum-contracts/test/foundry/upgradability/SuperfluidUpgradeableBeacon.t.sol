@@ -20,7 +20,6 @@ contract BadProxiableBeacon is BeaconProxiable {
 }
 
 contract SuperfluidUpgradeableBeaconTest is Test {
-
     address owner = address(0x420);
     SuperfluidUpgradeableBeacon public beacon;
 
@@ -43,7 +42,7 @@ contract SuperfluidUpgradeableBeaconTest is Test {
         beacon.upgradeTo(address(0));
         vm.stopPrank();
     }
-    
+
     function testRevertUpgradeToIncompatibleLogic() public {
         BadProxiableBeacon badProxiableBeacon = new BadProxiableBeacon();
         vm.expectRevert(SuperfluidUpgradeableBeacon.INCOMPATIBLE_LOGIC.selector);
@@ -64,6 +63,8 @@ contract SuperfluidUpgradeableBeaconTest is Test {
         vm.startPrank(owner);
         beacon.upgradeTo(address(proxiableBeacon));
         vm.stopPrank();
-        assertEq(beacon.implementation(), address(proxiableBeacon), "SuperfluidUpgradeableBeacon.t: wrong implementation");
+        assertEq(
+            beacon.implementation(), address(proxiableBeacon), "SuperfluidUpgradeableBeacon.t: wrong implementation"
+        );
     }
 }

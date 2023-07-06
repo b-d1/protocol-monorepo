@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: AGPLv3
 pragma solidity 0.8.19;
 
-import {
-    ISuperfluid,
-    ISuperToken,
-    SuperAppBase,
-    SuperAppDefinitions
-} from "../apps/SuperAppBase.sol";
+import { ISuperfluid, ISuperToken, SuperAppBase, SuperAppDefinitions } from "../apps/SuperAppBase.sol";
 import { IConstantFlowAgreementV1 } from "../interfaces/agreements/IConstantFlowAgreementV1.sol";
 
 /**
@@ -16,7 +11,6 @@ import { IConstantFlowAgreementV1 } from "../interfaces/agreements/IConstantFlow
  *      This is used for testing CFA callbacks logic.
  */
 contract MultiFlowTesterApp is SuperAppBase {
-
     struct ReceiverData {
         address to;
         uint256 proportion;
@@ -36,26 +30,22 @@ contract MultiFlowTesterApp is SuperAppBase {
         _cfa = cfa;
         _host = superfluid;
 
-        uint256 configWord =
-            SuperAppDefinitions.APP_LEVEL_FINAL |
-            SuperAppDefinitions.BEFORE_AGREEMENT_CREATED_NOOP |
-            SuperAppDefinitions.BEFORE_AGREEMENT_TERMINATED_NOOP;
+        uint256 configWord = SuperAppDefinitions.APP_LEVEL_FINAL | SuperAppDefinitions.BEFORE_AGREEMENT_CREATED_NOOP
+            | SuperAppDefinitions.BEFORE_AGREEMENT_TERMINATED_NOOP;
 
         _host.registerAppWithKey(configWord, "");
     }
 
-    function _parseUserData(
-        bytes memory userData
-    )
-        private pure
+    function _parseUserData(bytes memory userData)
+        private
+        pure
         returns (address sender, Configuration memory configuration)
     {
         // parse user data
         uint8 ratioPct;
         address[] memory receivers;
         uint256[] memory proportions;
-        (sender, ratioPct, receivers, proportions) = abi.decode(
-            userData, (address, uint8, address[], uint256[]));
+        (sender, ratioPct, receivers, proportions) = abi.decode(userData, (address, uint8, address[], uint256[]));
         assert(receivers.length == proportions.length);
 
         configuration.ratioPct = ratioPct;
@@ -66,7 +56,7 @@ contract MultiFlowTesterApp is SuperAppBase {
         }
     }
 
-    function _sumProportions(ReceiverData[] memory receivers) internal pure returns(uint256 sum) {
+    function _sumProportions(ReceiverData[] memory receivers) internal pure returns (uint256 sum) {
         for (uint256 i = 0; i < receivers.length; ++i) {
             sum += receivers[i].proportion;
         }
@@ -79,10 +69,7 @@ contract MultiFlowTesterApp is SuperAppBase {
         int96 flowRate,
         uint256 appCreditGranted,
         bytes calldata ctx
-    )
-        private
-        returns (bytes memory newCtx)
-    {
+    ) private returns (bytes memory newCtx) {
         uint256 sum = _sumProportions(configuration.receivers);
 
         newCtx = ctx;
@@ -100,19 +87,11 @@ contract MultiFlowTesterApp is SuperAppBase {
         for (uint256 i = 0; i < configuration.receivers.length; ++i) {
             ReceiverData memory receiverData = configuration.receivers[i];
             uint256 targetCredit = appCreditGranted * receiverData.proportion / sum;
-            int96 targetFlowRate = _cfa.getMaximumFlowRateFromDeposit(
-                superToken,
-                targetCredit
-            );
+            int96 targetFlowRate = _cfa.getMaximumFlowRateFromDeposit(superToken, targetCredit);
             flowRate -= targetFlowRate;
-            bytes memory callData = abi.encodeWithSelector(
-                selector,
-                superToken,
-                receiverData.to,
-                targetFlowRate,
-                new bytes(0)
-            );
-            (newCtx, ) = _host.callAgreementWithContext(
+            bytes memory callData =
+                abi.encodeWithSelector(selector, superToken, receiverData.to, targetFlowRate, new bytes(0));
+            (newCtx,) = _host.callAgreementWithContext(
                 _cfa,
                 callData,
                 new bytes(0), // user data
@@ -123,25 +102,12 @@ contract MultiFlowTesterApp is SuperAppBase {
     }
 
     // this function is for testing purpose
-    function createFlow(
-        ISuperToken superToken,
-        address receiver,
-        int96 flowRate,
-        bytes calldata ctx
-    )
+    function createFlow(ISuperToken superToken, address receiver, int96 flowRate, bytes calldata ctx)
         external
         returns (bytes memory newCtx)
     {
-        bytes memory callData = abi.encodeCall(
-            _cfa.createFlow,
-            (
-                superToken,
-                receiver,
-                flowRate,
-                new bytes(0)
-            )
-        );
-        (newCtx, ) = _host.callAgreementWithContext(
+        bytes memory callData = abi.encodeCall(_cfa.createFlow, (superToken, receiver, flowRate, new bytes(0)));
+        (newCtx,) = _host.callAgreementWithContext(
             _cfa,
             callData,
             new bytes(0), // user data
@@ -150,7 +116,7 @@ contract MultiFlowTesterApp is SuperAppBase {
     }
 
     struct StackVars {
-    	ISuperfluid.Context context;
+        ISuperfluid.Context context;
         address mfaSender;
         Configuration configuration;
         address flowSender;
@@ -162,13 +128,9 @@ contract MultiFlowTesterApp is SuperAppBase {
         address agreementClass,
         bytes32 agreementId,
         bytes calldata agreementData,
-        bytes calldata /*cbdata*/,
+        bytes calldata, /*cbdata*/
         bytes calldata ctx
-    )
-        external override
-        onlyHost
-        returns(bytes memory newCtx)
-    {
+    ) external override onlyHost returns (bytes memory newCtx) {
         assert(agreementClass == address(_cfa));
         StackVars memory vars;
 
@@ -183,29 +145,21 @@ contract MultiFlowTesterApp is SuperAppBase {
             assert(vars.context.appCreditGranted > 0);
         }
         int96 flowRate;
-        (,flowRate,,) = _cfa.getFlowByID(superToken, agreementId);
+        (, flowRate,,) = _cfa.getFlowByID(superToken, agreementId);
         newCtx = _updateMultiFlow(
-            vars.configuration,
-            superToken,
-            _cfa.createFlow.selector,
-            flowRate,
-            vars.context.appCreditGranted,
-            ctx);
+            vars.configuration, superToken, _cfa.createFlow.selector, flowRate, vars.context.appCreditGranted, ctx
+        );
     }
 
     function beforeAgreementUpdated(
         ISuperToken superToken,
         address agreementClass,
         bytes32 agreementId,
-        bytes calldata /*agreementData*/,
+        bytes calldata, /*agreementData*/
         bytes calldata /*ctx*/
-    )
-        external view override
-        onlyHost
-        returns (bytes memory cbdata)
-    {
+    ) external view override onlyHost returns (bytes memory cbdata) {
         assert(agreementClass == address(_cfa));
-        (, int256 oldFlowRate, ,) = _cfa.getFlowByID(superToken, agreementId);
+        (, int256 oldFlowRate,,) = _cfa.getFlowByID(superToken, agreementId);
         return abi.encode(oldFlowRate);
     }
 
@@ -214,13 +168,9 @@ contract MultiFlowTesterApp is SuperAppBase {
         address agreementClass,
         bytes32 agreementId,
         bytes calldata agreementData,
-        bytes calldata /* cbdata */,
+        bytes calldata, /* cbdata */
         bytes calldata ctx
-    )
-        external override
-        onlyHost
-        returns (bytes memory newCtx)
-    {
+    ) external override onlyHost returns (bytes memory newCtx) {
         assert(agreementClass == address(_cfa));
         StackVars memory vars;
 
@@ -235,29 +185,20 @@ contract MultiFlowTesterApp is SuperAppBase {
             assert(vars.context.appCreditGranted > 0);
         }
         int96 flowRate;
-        (,flowRate,,) = _cfa.getFlowByID(superToken, agreementId);
+        (, flowRate,,) = _cfa.getFlowByID(superToken, agreementId);
         newCtx = _updateMultiFlow(
-            vars.configuration,
-            superToken,
-            _cfa.updateFlow.selector,
-            flowRate,
-            vars.context.appCreditGranted,
-            ctx);
+            vars.configuration, superToken, _cfa.updateFlow.selector, flowRate, vars.context.appCreditGranted, ctx
+        );
     }
 
     function afterAgreementTerminated(
         ISuperToken superToken,
         address agreementClass,
-        bytes32 /*agreementId*/,
+        bytes32, /*agreementId*/
         bytes calldata agreementData,
-        bytes calldata /*cbdata*/,
+        bytes calldata, /*cbdata*/
         bytes calldata ctx
-    )
-
-        external override
-        onlyHost
-        returns (bytes memory newCtx)
-    {
+    ) external override onlyHost returns (bytes memory newCtx) {
         assert(agreementClass == address(_cfa));
         StackVars memory vars;
 
@@ -282,14 +223,14 @@ contract MultiFlowTesterApp is SuperAppBase {
                         new bytes(0) //placeholder ctx
                     )
                 );
-                (newCtx, ) = _host.callAgreementWithContext(
+                (newCtx,) = _host.callAgreementWithContext(
                     _cfa,
                     callData,
                     new bytes(0), // user data
                     newCtx
                 );
             }
-        } else /* if (vars.flowSender == address(this)) */ {
+        } /* if (vars.flowSender == address(this)) */ else {
             for (uint256 i = 0; i < vars.configuration.receivers.length; ++i) {
                 // skip current closed flow
                 if (vars.configuration.receivers[i].to == vars.flowReceiver) continue;
@@ -303,7 +244,7 @@ contract MultiFlowTesterApp is SuperAppBase {
                         new bytes(0) //placeholder ctx
                     )
                 );
-                (newCtx, ) = _host.callAgreementWithContext(
+                (newCtx,) = _host.callAgreementWithContext(
                     _cfa,
                     callData,
                     new bytes(0), // user data
@@ -320,7 +261,7 @@ contract MultiFlowTesterApp is SuperAppBase {
                     new bytes(0) //placeholder ctx
                 )
             );
-            (newCtx, ) = _host.callAgreementWithContext(
+            (newCtx,) = _host.callAgreementWithContext(
                 _cfa,
                 callData,
                 new bytes(0), // user data

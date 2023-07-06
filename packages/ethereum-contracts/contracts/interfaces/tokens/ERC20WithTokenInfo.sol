@@ -13,4 +13,4 @@ import { TokenInfo } from "./TokenInfo.sol";
  *
  */
 // solhint-disable-next-line no-empty-blocks
-abstract contract ERC20WithTokenInfo is IERC20, TokenInfo {}
+abstract contract ERC20WithTokenInfo is IERC20, TokenInfo { }

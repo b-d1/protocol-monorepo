@@ -6,7 +6,6 @@ pragma solidity >= 0.8.4;
  * @author Superfluid
  */
 interface IResolver {
-
     event Set(string indexed name, address target);
 
     /**
@@ -18,5 +17,4 @@ interface IResolver {
      * @dev Get address by name
      */
     function get(string calldata name) external view returns (address);
-
 }

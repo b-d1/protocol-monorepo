@@ -1,17 +1,10 @@
 // SPDX-License-Identifier: AGPLv3
 pragma solidity 0.8.19;
 
-import {
-    ISuperfluid,
-    ISuperToken,
-    ISuperApp,
-    ISuperAgreement,
-    SuperAppDefinitions
-} from "../superfluid/Superfluid.sol";
+import { ISuperfluid, ISuperToken, ISuperApp, ISuperAgreement, SuperAppDefinitions } from "../superfluid/Superfluid.sol";
 import { AgreementMock } from "./AgreementMock.sol";
 
 contract SuperAppMockAux {
-
     function actionPingAgreement(ISuperfluid host, AgreementMock agreement, uint256 ping, bytes calldata ctx)
         external
     {
@@ -26,25 +19,17 @@ contract SuperAppMockAux {
                 )
             ),
             new bytes(0), // user data
-            ctx);
+            ctx
+        );
     }
 
-    function actionCallActionNoop(ISuperfluid host, SuperAppMock app, bytes calldata ctx)
-        external
-    {
-        host.callAppActionWithContext(
-            app,
-            abi.encodeCall(
-                app.actionNoop,
-                (new bytes(0))
-            ),
-            ctx);
+    function actionCallActionNoop(ISuperfluid host, SuperAppMock app, bytes calldata ctx) external {
+        host.callAppActionWithContext(app, abi.encodeCall(app.actionNoop, (new bytes(0))), ctx);
     }
 }
 
 // The default SuperApp mock that does many tricks
 contract SuperAppMock is ISuperApp {
-
     ISuperfluid private _host;
     SuperAppMockAux private _aux;
 
@@ -65,21 +50,17 @@ contract SuperAppMock is ISuperApp {
         _host.allowCompositeApp(target);
     }
 
-    /*************************************************************************
-    * Test App Actions
-    **************************************************************************/
+    /**
+     *
+     * Test App Actions
+     *
+     */
 
-    event NoopEvent(
-        uint8 appLevel,
-        uint8 callType,
-        bytes4 agreementSelector);
+    event NoopEvent(uint8 appLevel, uint8 callType, bytes4 agreementSelector);
 
     function actionNoop(bytes calldata ctx) external requireValidCtx(ctx) returns (bytes memory newCtx) {
         ISuperfluid.Context memory context = ISuperfluid(msg.sender).decodeCtx(ctx);
-        emit NoopEvent(
-            context.appCallbackLevel,
-            context.callType,
-            context.agreementSelector);
+        emit NoopEvent(context.appCallbackLevel, context.callType, context.agreementSelector);
         return ctx;
     }
 
@@ -90,10 +71,7 @@ contract SuperAppMock is ISuperApp {
     {
         ISuperfluid.Context memory context = ISuperfluid(msg.sender).decodeCtx(ctx);
         assert(context.msgSender == expectedMsgSender);
-        emit NoopEvent(
-            context.appCallbackLevel,
-            context.callType,
-            context.agreementSelector);
+        emit NoopEvent(context.appCallbackLevel, context.callType, context.agreementSelector);
         return ctx;
     }
 
@@ -120,20 +98,13 @@ contract SuperAppMock is ISuperApp {
         _host.callAppAction(ISuperApp(address(0)), new bytes(0));
     }
 
-    function actionAlteringCtx(bytes calldata ctx)
-        external view
-        requireValidCtx(ctx)
-        returns (bytes memory newCtx)
-    {
+    function actionAlteringCtx(bytes calldata ctx) external view requireValidCtx(ctx) returns (bytes memory newCtx) {
         return abi.encode(42);
     }
 
-    function actionReturnEmptyCtx(bytes calldata ctx)
-        external view
-        requireValidCtx(ctx)
+    function actionReturnEmptyCtx(bytes calldata ctx) external view requireValidCtx(ctx) 
     // solhint-disable-next-line no-empty-blocks
-    {
-    }
+    { }
 
     function actionPingAgreementThroughAux(AgreementMock agreement, uint256 ping, bytes calldata ctx)
         external
@@ -143,10 +114,7 @@ contract SuperAppMock is ISuperApp {
         _aux.actionPingAgreement(_host, agreement, ping, ctx);
     }
 
-    function actionCallActionNoopThroughAux(bytes calldata ctx)
-        external
-        requireValidCtx(ctx)
-    {
+    function actionCallActionNoopThroughAux(bytes calldata ctx) external requireValidCtx(ctx) {
         // this should fail
         _aux.actionCallActionNoop(_host, this, ctx);
     }
@@ -156,7 +124,7 @@ contract SuperAppMock is ISuperApp {
         requireValidCtx(ctx)
         returns (bytes memory newCtx)
     {
-        (newCtx, ) = _host.callAgreementWithContext(
+        (newCtx,) = _host.callAgreementWithContext(
             agreement,
             abi.encodeCall(
                 agreement.pingMe,
@@ -167,7 +135,8 @@ contract SuperAppMock is ISuperApp {
                 )
             ),
             new bytes(0), // user data
-            ctx);
+            ctx
+        );
     }
 
     function actionAgreementRevert(AgreementMock agreement, string calldata reason, bytes calldata ctx)
@@ -175,31 +144,16 @@ contract SuperAppMock is ISuperApp {
         requireValidCtx(ctx)
         returns (bytes memory newCtx)
     {
-        (newCtx, ) = _host.callAgreementWithContext(
+        (newCtx,) = _host.callAgreementWithContext(
             agreement,
-            abi.encodeCall(
-                agreement.doRevert,
-                (
-                    reason,
-                    new bytes(0)
-                )
-            ),
+            abi.encodeCall(agreement.doRevert, (reason, new bytes(0))),
             new bytes(0), // user data
-            ctx);
+            ctx
+        );
     }
 
-    function actionCallActionNoop(bytes calldata ctx)
-        external
-        requireValidCtx(ctx)
-        returns (bytes memory newCtx)
-    {
-        newCtx = _host.callAppActionWithContext(
-            this,
-            abi.encodeCall(
-                this.actionNoop,
-                (new bytes(0))
-            ),
-            ctx);
+    function actionCallActionNoop(bytes calldata ctx) external requireValidCtx(ctx) returns (bytes memory newCtx) {
+        newCtx = _host.callAppActionWithContext(this, abi.encodeCall(this.actionNoop, (new bytes(0))), ctx);
     }
 
     function actionCallActionRevert(string calldata reason, bytes calldata ctx)
@@ -208,15 +162,8 @@ contract SuperAppMock is ISuperApp {
         returns (bytes memory newCtx)
     {
         newCtx = _host.callAppActionWithContext(
-            this,
-            abi.encodeCall(
-                this.actionRevertWithReason,
-                (
-                    reason,
-                    new bytes(0)
-                )
-            ),
-            ctx);
+            this, abi.encodeCall(this.actionRevertWithReason, (reason, new bytes(0))), ctx
+        );
     }
 
     function actionCallAgreementWithInvalidCtx(AgreementMock agreement, bytes calldata ctx)
@@ -224,7 +171,7 @@ contract SuperAppMock is ISuperApp {
         requireValidCtx(ctx)
         returns (bytes memory newCtx)
     {
-        (newCtx, ) = _host.callAgreementWithContext(
+        (newCtx,) = _host.callAgreementWithContext(
             agreement,
             abi.encodeCall(
                 agreement.pingMe,
@@ -235,7 +182,8 @@ contract SuperAppMock is ISuperApp {
                 )
             ),
             new bytes(0), // user data
-            abi.encode(42));
+            abi.encode(42)
+        );
     }
 
     function actionCallActionWithInvalidCtx(string calldata reason, bytes calldata ctx)
@@ -244,34 +192,20 @@ contract SuperAppMock is ISuperApp {
         returns (bytes memory newCtx)
     {
         newCtx = _host.callAppActionWithContext(
-            this,
-            abi.encodeCall(
-                this.actionRevertWithReason,
-                (
-                    reason,
-                    new bytes(0)
-                )
-            ),
-            abi.encode(42));
+            this, abi.encodeCall(this.actionRevertWithReason, (reason, new bytes(0))), abi.encode(42)
+        );
     }
 
-    function actionCallBadAction(bytes calldata ctx)
-        external
-        requireValidCtx(ctx)
-    {
-        _host.callAppActionWithContext(
-            this,
-            abi.encodeCall(
-                this.actionAlteringCtx,
-                (new bytes(0))
-            ),
-            ctx);
+    function actionCallBadAction(bytes calldata ctx) external requireValidCtx(ctx) {
+        _host.callAppActionWithContext(this, abi.encodeCall(this.actionAlteringCtx, (new bytes(0))), ctx);
         assert(false);
     }
 
-    /*************************************************************************
-    * Callbacks
-    **************************************************************************/
+    /**
+     *
+     * Callbacks
+     *
+     */
 
     enum NextCallbackActionType {
         Noop, // 0
@@ -290,19 +224,12 @@ contract SuperAppMock is ISuperApp {
 
     NextCallbackAction private _nextCallbackAction;
 
-    function setNextCallbackAction(
-        NextCallbackActionType actionType,
-        bytes calldata data)
-        external
-    {
+    function setNextCallbackAction(NextCallbackActionType actionType, bytes calldata data) external {
         _nextCallbackAction.actionType = actionType;
         _nextCallbackAction.data = data;
     }
 
-    function _executeBeforeCallbackAction()
-        private view
-        returns (bytes memory cbdata)
-    {
+    function _executeBeforeCallbackAction() private view returns (bytes memory cbdata) {
         if (_nextCallbackAction.actionType == NextCallbackActionType.Noop) {
             return "Noop";
         } else if (_nextCallbackAction.actionType == NextCallbackActionType.Assert) {
@@ -315,19 +242,15 @@ contract SuperAppMock is ISuperApp {
         } else if (_nextCallbackAction.actionType == NextCallbackActionType.BurnGas) {
             uint256 gasToBurn = abi.decode(_nextCallbackAction.data, (uint256));
             _burnGas(gasToBurn);
-        } else assert(false);
+        } else {
+            assert(false);
+        }
     }
 
-    function _executeAfterCallbackAction(bytes memory ctx)
-        private
-        returns (bytes memory newCtx)
-    {
+    function _executeAfterCallbackAction(bytes memory ctx) private returns (bytes memory newCtx) {
         ISuperfluid.Context memory context = ISuperfluid(msg.sender).decodeCtx(ctx);
         if (_nextCallbackAction.actionType == NextCallbackActionType.Noop) {
-            emit NoopEvent(
-                context.appCallbackLevel,
-                context.callType,
-                context.agreementSelector);
+            emit NoopEvent(context.appCallbackLevel, context.callType, context.agreementSelector);
             return ctx;
         } else if (_nextCallbackAction.actionType == NextCallbackActionType.Assert) {
             assert(false);
@@ -343,106 +266,78 @@ contract SuperAppMock is ISuperApp {
             _burnGas(gasToBurn);
         } else if (_nextCallbackAction.actionType == NextCallbackActionType.ReturnEmptyCtx) {
             return new bytes(0);
-        } else assert(false);
+        } else {
+            assert(false);
+        }
     }
 
     function beforeAgreementCreated(
-        ISuperToken /*superToken*/,
-        address /*agreementClass*/,
-        bytes32 /*agreementId*/,
-        bytes calldata /*agreementData*/,
+        ISuperToken, /*superToken*/
+        address, /*agreementClass*/
+        bytes32, /*agreementId*/
+        bytes calldata, /*agreementData*/
         bytes calldata ctx
-    )
-        external view
-        requireValidCtx(ctx)
-        virtual override
-        returns (bytes memory /*cbdata*/)
-    {
+    ) external view virtual override requireValidCtx(ctx) returns (bytes memory /*cbdata*/ ) {
         return _executeBeforeCallbackAction();
     }
 
     function afterAgreementCreated(
-        ISuperToken /*superToken*/,
-        address /*agreementClass*/,
-        bytes32 /*agreementId*/,
-        bytes calldata /*agreementData*/,
-        bytes calldata /*cbdata*/,
+        ISuperToken, /*superToken*/
+        address, /*agreementClass*/
+        bytes32, /*agreementId*/
+        bytes calldata, /*agreementData*/
+        bytes calldata, /*cbdata*/
         bytes calldata ctx
-    )
-        external
-        requireValidCtx(ctx)
-        virtual override
-        returns (bytes memory newCtx)
-    {
+    ) external virtual override requireValidCtx(ctx) returns (bytes memory newCtx) {
         return _executeAfterCallbackAction(ctx);
     }
 
     function beforeAgreementUpdated(
-        ISuperToken /*superToken*/,
-        address /*agreementClass*/,
-        bytes32 /*agreementId*/,
-        bytes calldata /*agreementData*/,
+        ISuperToken, /*superToken*/
+        address, /*agreementClass*/
+        bytes32, /*agreementId*/
+        bytes calldata, /*agreementData*/
         bytes calldata ctx
-    )
-        external view
-        requireValidCtx(ctx)
-        virtual override
-        returns (bytes memory /*cbdata*/)
-    {
+    ) external view virtual override requireValidCtx(ctx) returns (bytes memory /*cbdata*/ ) {
         return _executeBeforeCallbackAction();
     }
 
     function afterAgreementUpdated(
-        ISuperToken /*superToken*/,
-        address /*agreementClass*/,
-        bytes32 /*agreementId*/,
-        bytes calldata /*agreementData*/,
-        bytes calldata /*cbdata*/,
+        ISuperToken, /*superToken*/
+        address, /*agreementClass*/
+        bytes32, /*agreementId*/
+        bytes calldata, /*agreementData*/
+        bytes calldata, /*cbdata*/
         bytes calldata ctx
-    )
-        external
-        requireValidCtx(ctx)
-        virtual override
-        returns (bytes memory newCtx)
-    {
+    ) external virtual override requireValidCtx(ctx) returns (bytes memory newCtx) {
         return _executeAfterCallbackAction(ctx);
     }
 
     function beforeAgreementTerminated(
-        ISuperToken /*superToken*/,
-        address /*agreementClass*/,
-        bytes32 /*agreementId*/,
-        bytes calldata /*agreementData*/,
+        ISuperToken, /*superToken*/
+        address, /*agreementClass*/
+        bytes32, /*agreementId*/
+        bytes calldata, /*agreementData*/
         bytes calldata ctx
-    )
-        external view
-        requireValidCtx(ctx)
-        virtual override
-        returns (bytes memory /*cbdata*/)
-    {
+    ) external view virtual override requireValidCtx(ctx) returns (bytes memory /*cbdata*/ ) {
         return _executeBeforeCallbackAction();
     }
 
     function afterAgreementTerminated(
-        ISuperToken /*superToken*/,
-        address /*agreementClass*/,
-        bytes32 /*agreementId*/,
-        bytes calldata /*agreementData*/,
-        bytes calldata /*cbdata*/,
+        ISuperToken, /*superToken*/
+        address, /*agreementClass*/
+        bytes32, /*agreementId*/
+        bytes calldata, /*agreementData*/
+        bytes calldata, /*cbdata*/
         bytes calldata ctx
-    )
-        external
-        requireValidCtx(ctx)
-        virtual override
-        returns (bytes memory newCtx)
-    {
+    ) external virtual override requireValidCtx(ctx) returns (bytes memory newCtx) {
         return _executeAfterCallbackAction(ctx);
     }
 
     function _burnGas(uint256 gasToBurn) private view {
         uint256 gasStart = gasleft();
         uint256 gasNow = gasleft();
-        while ((gasStart - gasNow) < gasToBurn - 1000 /* some margin for other things*/) {
+        while ((gasStart - gasNow) < gasToBurn - 1000 /* some margin for other things*/ ) {
             gasNow = gasleft();
         }
     }
@@ -455,7 +350,6 @@ contract SuperAppMock is ISuperApp {
 
 // Bad super app! This one returns empty ctx
 contract SuperAppMockReturningEmptyCtx {
-
     ISuperfluid private _host;
 
     constructor(ISuperfluid host) {
@@ -464,59 +358,50 @@ contract SuperAppMockReturningEmptyCtx {
     }
 
     function beforeAgreementCreated(
-        ISuperToken /*superToken*/,
-        address /*agreementClass*/,
-        bytes32 /*agreementId*/,
-        bytes calldata /*agreementData*/,
+        ISuperToken, /*superToken*/
+        address, /*agreementClass*/
+        bytes32, /*agreementId*/
+        bytes calldata, /*agreementData*/
         bytes calldata /*ctx*/
-    )
-        external pure
-        // solhint-disable-next-line no-empty-blocks
-    {
-    }
+    ) external pure 
+    // solhint-disable-next-line no-empty-blocks
+    { }
 
     function afterAgreementCreated(
-        ISuperToken /*superToken*/,
-        address /*agreementClass*/,
-        bytes32 /*agreementId*/,
-        bytes calldata /*agreementData*/,
-        bytes calldata /*cbdata*/,
+        ISuperToken, /*superToken*/
+        address, /*agreementClass*/
+        bytes32, /*agreementId*/
+        bytes calldata, /*agreementData*/
+        bytes calldata, /*cbdata*/
         bytes calldata /*ctx*/
-    )
-        external pure
-        // solhint-disable-next-line no-empty-blocks
-    {
-    }
+    ) external pure 
+    // solhint-disable-next-line no-empty-blocks
+    { }
 
     function beforeAgreementTerminated(
-        ISuperToken /*superToken*/,
-        address /*agreementClass*/,
-        bytes32 /*agreementId*/,
-        bytes calldata /*agreementData*/,
+        ISuperToken, /*superToken*/
+        address, /*agreementClass*/
+        bytes32, /*agreementId*/
+        bytes calldata, /*agreementData*/
         bytes calldata /*ctx*/
-    )
-        external pure
-        // solhint-disable-next-line no-empty-blocks
-    {
-    }
+    ) external pure 
+    // solhint-disable-next-line no-empty-blocks
+    { }
 
     function afterAgreementTerminated(
-        ISuperToken /*superToken*/,
-        address /*agreementClass*/,
-        bytes32 /*agreementId*/,
-        bytes calldata /*agreementData*/,
-        bytes calldata /*cbdata*/,
+        ISuperToken, /*superToken*/
+        address, /*agreementClass*/
+        bytes32, /*agreementId*/
+        bytes calldata, /*agreementData*/
+        bytes calldata, /*cbdata*/
         bytes calldata /*ctx*/
-    )
-        external pure
-        // solhint-disable-next-line no-empty-blocks
-    {
-    }
+    ) external pure 
+    // solhint-disable-next-line no-empty-blocks
+    { }
 }
 
 // Bad super app! This one returns invalid ctx
 contract SuperAppMockReturningInvalidCtx {
-
     ISuperfluid private _host;
 
     constructor(ISuperfluid host) {
@@ -525,37 +410,30 @@ contract SuperAppMockReturningInvalidCtx {
     }
 
     function afterAgreementCreated(
-        ISuperToken /*superToken*/,
-        address /*agreementClass*/,
-        bytes32 /*agreementId*/,
-        bytes calldata /*agreementData*/,
-        bytes calldata /*cbdata*/,
+        ISuperToken, /*superToken*/
+        address, /*agreementClass*/
+        bytes32, /*agreementId*/
+        bytes calldata, /*agreementData*/
+        bytes calldata, /*cbdata*/
         bytes calldata /*ctx*/
-    )
-        external pure
-        returns (uint256)
-    {
+    ) external pure returns (uint256) {
         return 42;
     }
 
     function afterAgreementTerminated(
-        ISuperToken /*superToken*/,
-        address /*agreementClass*/,
-        bytes32 /*agreementId*/,
-        bytes calldata /*agreementData*/,
-        bytes calldata /*cbdata*/,
+        ISuperToken, /*superToken*/
+        address, /*agreementClass*/
+        bytes32, /*agreementId*/
+        bytes calldata, /*agreementData*/
+        bytes calldata, /*cbdata*/
         bytes calldata /*ctx*/
-    )
-        external pure
-        returns (uint256)
-    {
+    ) external pure returns (uint256) {
         return 42;
     }
 }
 
 // Bad super app! A second level app that calls other app
 contract SuperAppMock2ndLevel {
-
     ISuperfluid private _host;
     SuperAppMock private _app;
     AgreementMock private _agreement;
@@ -572,27 +450,19 @@ contract SuperAppMock2ndLevel {
     }
 
     function afterAgreementCreated(
-        ISuperToken /*superToken*/,
-        address /*agreementClass*/,
-        bytes32 /*agreementId*/,
-        bytes calldata /*agreementData*/,
-        bytes calldata /*cbdata*/,
+        ISuperToken, /*superToken*/
+        address, /*agreementClass*/
+        bytes32, /*agreementId*/
+        bytes calldata, /*agreementData*/
+        bytes calldata, /*cbdata*/
         bytes calldata ctx
-    )
-        external
-        returns (bytes memory newCtx)
-    {
-        (newCtx, ) = _host.callAgreementWithContext(
+    ) external returns (bytes memory newCtx) {
+        (newCtx,) = _host.callAgreementWithContext(
             _agreement,
-            abi.encodeCall(
-                _agreement.callAppAfterAgreementCreatedCallback,
-                (
-                    _app,
-                    new bytes(0)
-                )
-            ),
+            abi.encodeCall(_agreement.callAppAfterAgreementCreatedCallback, (_app, new bytes(0))),
             new bytes(0), // user data
-            ctx);
+            ctx
+        );
     }
 }
 

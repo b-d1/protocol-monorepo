@@ -4,7 +4,6 @@ pragma solidity 0.8.19;
 import { ISuperToken, IERC20 } from "../superfluid/Superfluid.sol";
 
 contract MockSmartWallet {
-
     function approveTest(IERC20 token, address spender, uint256 amount) external {
         token.approve(spender, amount);
     }

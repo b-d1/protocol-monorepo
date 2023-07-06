@@ -3,7 +3,6 @@ pragma solidity >= 0.8.4;
 
 import { ISuperToken } from "../superfluid/ISuperToken.sol";
 
-
 /**
  * @title Super ETH (SETH) custom token interface
  * @author Superfluid
@@ -20,4 +19,4 @@ interface ISETHCustom {
  * @author Superfluid
  */
 // solhint-disable-next-line no-empty-blocks
-interface ISETH is ISETHCustom, ISuperToken {}
+interface ISETH is ISETHCustom, ISuperToken { }

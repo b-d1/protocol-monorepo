@@ -26,7 +26,6 @@ contract PoolAdminNFTMock is PoolAdminNFT {
 }
 
 contract PoolMemberNFTMock is PoolMemberNFT {
-
     constructor(ISuperfluid host) PoolMemberNFT(host) { }
 
     /// @dev a mock mint function that exposes the internal _mint function

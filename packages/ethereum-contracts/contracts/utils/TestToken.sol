@@ -12,12 +12,7 @@ contract TestToken is ERC20 {
     uint256 private immutable _mintLimit;
     uint8 private _decimals;
 
-    constructor(
-        string memory name,
-        string memory symbol,
-        uint8 initDecimals,
-        uint256 mintLimit
-    ) ERC20(name, symbol) {
+    constructor(string memory name, string memory symbol, uint8 initDecimals, uint256 mintLimit) ERC20(name, symbol) {
         _decimals = initDecimals;
         _mintLimit = mintLimit;
     }

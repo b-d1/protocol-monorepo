@@ -18,39 +18,40 @@ import { IConstantInflowNFT } from "../superfluid/ConstantInflowNFT.sol";
 import { IPoolAdminNFT } from "../interfaces/superfluid/IPoolAdminNFT.sol";
 import { IPoolMemberNFT } from "../interfaces/superfluid/IPoolMemberNFT.sol";
 
-abstract contract SuperTokenFactoryBase is
-    UUPSProxiable,
-    ISuperTokenFactory
-{
+abstract contract SuperTokenFactoryBase is UUPSProxiable, ISuperTokenFactory {
     struct InitializeData {
         address underlyingToken;
         address superToken;
     }
 
-    /**************************************************************************
-    * Immutable Variables
-    **************************************************************************/
+    /**
+     *
+     * Immutable Variables
+     *
+     */
 
     // solhint-disable-next-line var-name-mixedcase
-    ISuperToken immutable public _SUPER_TOKEN_LOGIC;
+    ISuperToken public immutable _SUPER_TOKEN_LOGIC;
 
-    ISuperfluid immutable internal _host;
-
-    // solhint-disable-next-line var-name-mixedcase
-    IConstantOutflowNFT immutable public CONSTANT_OUTFLOW_NFT_LOGIC;
+    ISuperfluid internal immutable _host;
 
     // solhint-disable-next-line var-name-mixedcase
-    IConstantInflowNFT immutable public CONSTANT_INFLOW_NFT_LOGIC;
+    IConstantOutflowNFT public immutable CONSTANT_OUTFLOW_NFT_LOGIC;
 
     // solhint-disable-next-line var-name-mixedcase
-    IPoolAdminNFT immutable public POOL_ADMIN_NFT_LOGIC;
+    IConstantInflowNFT public immutable CONSTANT_INFLOW_NFT_LOGIC;
 
     // solhint-disable-next-line var-name-mixedcase
-    IPoolMemberNFT immutable public POOL_MEMBER_NFT_LOGIC;
+    IPoolAdminNFT public immutable POOL_ADMIN_NFT_LOGIC;
 
-    /**************************************************************************
-    * Storage Variables
-    **************************************************************************/
+    // solhint-disable-next-line var-name-mixedcase
+    IPoolMemberNFT public immutable POOL_MEMBER_NFT_LOGIC;
+
+    /**
+     *
+     * Storage Variables
+     *
+     */
 
     /* WARNING: NEVER RE-ORDER VARIABLES! Including the base contracts.
         Always double-check that new
@@ -96,7 +97,7 @@ abstract contract SuperTokenFactoryBase is
 
         POOL_ADMIN_NFT_LOGIC = poolAdminNFTLogic;
 
-        POOL_MEMBER_NFT_LOGIC = poolMemberNFTLogic;        
+        POOL_MEMBER_NFT_LOGIC = poolMemberNFTLogic;
 
         // emit SuperTokenLogicCreated event
         // note that creation here means the setting of the super token logic contract
@@ -106,26 +107,22 @@ abstract contract SuperTokenFactoryBase is
     }
 
     /// @inheritdoc ISuperTokenFactory
-    function getHost()
-       external view
-       override(ISuperTokenFactory)
-       returns(address host)
-    {
-       return address(_host);
+    function getHost() external view override(ISuperTokenFactory) returns (address host) {
+        return address(_host);
     }
 
-    /**************************************************************************
-    * UUPSProxiable
-    **************************************************************************/
+    /**
+     *
+     * UUPSProxiable
+     *
+     */
     /// @inheritdoc ISuperTokenFactory
     function initialize()
         external
         override
         initializer // OpenZeppelin Initializable
     // solhint-disable-next-line no-empty-blocks
-    {
-
-    }
+    { }
 
     function proxiableUUID() public pure override returns (bytes32) {
         return keccak256("org.superfluid-finance.contracts.SuperTokenFactory.implementation");
@@ -168,22 +165,18 @@ abstract contract SuperTokenFactoryBase is
         }
     }
 
-    /**************************************************************************
-    * ISuperTokenFactory
-    **************************************************************************/
+    /**
+     *
+     * ISuperTokenFactory
+     *
+     */
     /// @inheritdoc ISuperTokenFactory
-    function getSuperTokenLogic()
-        external view override
-        returns (ISuperToken)
-    {
+    function getSuperTokenLogic() external view override returns (ISuperToken) {
         return _SUPER_TOKEN_LOGIC;
     }
 
     /// @inheritdoc ISuperTokenFactory
-    function createCanonicalERC20Wrapper(ERC20WithTokenInfo _underlyingToken)
-        external
-        returns (ISuperToken)
-    {
+    function createCanonicalERC20Wrapper(ERC20WithTokenInfo _underlyingToken) external returns (ISuperToken) {
         // we use this to check if we have initialized the _canonicalWrapperSuperTokens mapping
         // @note we must set this during initialization
         if (_canonicalWrapperSuperTokens[address(0)] == address(0)) {
@@ -191,9 +184,7 @@ abstract contract SuperTokenFactoryBase is
         }
 
         address underlyingTokenAddress = address(_underlyingToken);
-        address canonicalSuperTokenAddress = _canonicalWrapperSuperTokens[
-                underlyingTokenAddress
-            ];
+        address canonicalSuperTokenAddress = _canonicalWrapperSuperTokens[underlyingTokenAddress];
 
         // if the canonical super token address exists, revert with custom error
         if (canonicalSuperTokenAddress != address(0)) {
@@ -205,9 +196,7 @@ abstract contract SuperTokenFactoryBase is
         UUPSProxy proxy = new UUPSProxy{ salt: salt }();
 
         // NOTE: address(proxy) is equivalent to address(superToken)
-        _canonicalWrapperSuperTokens[underlyingTokenAddress] = address(
-            proxy
-        );
+        _canonicalWrapperSuperTokens[underlyingTokenAddress] = address(proxy);
 
         // set the implementation/logic contract address for the newly deployed proxy
         proxy.initializeProxy(address(_SUPER_TOKEN_LOGIC));
@@ -239,10 +228,7 @@ abstract contract SuperTokenFactoryBase is
         Upgradability upgradability,
         string calldata name,
         string calldata symbol
-    )
-        public override
-        returns (ISuperToken superToken)
-    {
+    ) public override returns (ISuperToken superToken) {
         if (address(underlyingToken) == address(0)) {
             revert SUPER_TOKEN_FACTORY_ZERO_ADDRESS();
         }
@@ -254,19 +240,14 @@ abstract contract SuperTokenFactoryBase is
             // initialize the wrapper
             proxy.initializeProxy(address(_SUPER_TOKEN_LOGIC));
             superToken = ISuperToken(address(proxy));
-        } else /* if (type == Upgradability.FULL_UPGRADABLE) */ {
+        } /* if (type == Upgradability.FULL_UPGRADABLE) */ else {
             FullUpgradableSuperTokenProxy proxy = new FullUpgradableSuperTokenProxy();
             proxy.initialize();
             superToken = ISuperToken(address(proxy));
         }
 
         // initialize the token
-        superToken.initialize(
-            underlyingToken,
-            underlyingDecimals,
-            name,
-            symbol
-        );
+        superToken.initialize(underlyingToken, underlyingDecimals, name, symbol);
 
         emit SuperTokenCreated(superToken);
     }
@@ -277,25 +258,12 @@ abstract contract SuperTokenFactoryBase is
         Upgradability upgradability,
         string calldata name,
         string calldata symbol
-    )
-        external override
-        returns (ISuperToken superToken)
-    {
-        return createERC20Wrapper(
-            underlyingToken,
-            underlyingToken.decimals(),
-            upgradability,
-            name,
-            symbol
-        );
+    ) external override returns (ISuperToken superToken) {
+        return createERC20Wrapper(underlyingToken, underlyingToken.decimals(), upgradability, name, symbol);
     }
 
     /// @inheritdoc ISuperTokenFactory
-    function initializeCustomSuperToken(
-        address customSuperTokenProxy
-    )
-        external override
-    {
+    function initializeCustomSuperToken(address customSuperTokenProxy) external override {
         // odd solidity stuff..
         // NOTE payable necessary because UUPSProxy has a payable fallback function
         address payable a = payable(address(uint160(customSuperTokenProxy)));
@@ -310,9 +278,7 @@ abstract contract SuperTokenFactoryBase is
         view
         returns (address superTokenAddress, bool isDeployed)
     {
-        address existingAddress = _canonicalWrapperSuperTokens[
-            _underlyingToken
-        ];
+        address existingAddress = _canonicalWrapperSuperTokens[_underlyingToken];
 
         if (existingAddress != address(0)) {
             superTokenAddress = existingAddress;
@@ -343,17 +309,13 @@ abstract contract SuperTokenFactoryBase is
         view
         returns (address superTokenAddress)
     {
-        superTokenAddress = _canonicalWrapperSuperTokens[
-            _underlyingTokenAddress
-        ];
+        superTokenAddress = _canonicalWrapperSuperTokens[_underlyingTokenAddress];
     }
 
     /// @notice Initializes list of canonical wrapper super tokens.
     /// @dev Note that this should also be kind of a throwaway function which will be executed only once.
     /// @param _data an array of canonical wrappper super tokens to be set
-    function initializeCanonicalWrapperSuperTokens(
-        InitializeData[] calldata _data
-    ) external virtual  {
+    function initializeCanonicalWrapperSuperTokens(InitializeData[] calldata _data) external virtual {
         Ownable gov = Ownable(address(_host.getGovernance()));
         if (msg.sender != gov.owner()) revert SUPER_TOKEN_FACTORY_ONLY_GOVERNANCE_OWNER();
 
@@ -365,14 +327,12 @@ abstract contract SuperTokenFactoryBase is
 
         // initialize mapping
         for (uint256 i = 0; i < _data.length; i++) {
-            _canonicalWrapperSuperTokens[_data[i].underlyingToken] = _data[i]
-                .superToken;
+            _canonicalWrapperSuperTokens[_data[i].underlyingToken] = _data[i].superToken;
         }
     }
 }
 
-contract SuperTokenFactory is SuperTokenFactoryBase
-{
+contract SuperTokenFactory is SuperTokenFactoryBase {
     /* WARNING: NEVER RE-ORDER VARIABLES! Including the base contracts.
         Always double-check that new
         variables are added APPEND-ONLY. Re-ordering variables can
@@ -386,16 +346,7 @@ contract SuperTokenFactory is SuperTokenFactoryBase
         IPoolAdminNFT poolAdminNFT,
         IPoolMemberNFT poolMemberNFT
     )
-        SuperTokenFactoryBase(
-            host,
-            superTokenLogic,
-            constantOutflowNFT,
-            constantInflowNFT,
-            poolAdminNFT,
-            poolMemberNFT
-        )
+        SuperTokenFactoryBase(host, superTokenLogic, constantOutflowNFT, constantInflowNFT, poolAdminNFT, poolMemberNFT)
     // solhint-disable-next-line no-empty-blocks
-    {
-
-    }
+    { }
 }

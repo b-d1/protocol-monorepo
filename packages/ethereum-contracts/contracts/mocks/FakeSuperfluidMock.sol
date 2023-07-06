@@ -4,13 +4,7 @@ pragma solidity 0.8.19;
 import { CallUtils } from "../libs/CallUtils.sol";
 
 contract FakeSuperfluidMock {
-
-    function callAgreement(
-        address agreement,
-        bytes calldata callData
-    )
-        external
-    {
+    function callAgreement(address agreement, bytes calldata callData) external {
         bool success;
         bytes memory returnedData;
         // solhint-disable-next-line avoid-low-level-calls

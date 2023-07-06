@@ -4,7 +4,6 @@ pragma solidity 0.8.19;
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 abstract contract BeaconProxiable is Initializable {
-
     // allows to mark logic contracts as initialized
     // solhint-disable-next-line no-empty-blocks
     function castrate() external initializer { }

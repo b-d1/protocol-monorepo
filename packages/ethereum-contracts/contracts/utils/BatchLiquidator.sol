@@ -13,7 +13,6 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  */
 
 contract BatchLiquidator {
-
     error ARRAY_SIZES_DIFFERENT();
 
     address public immutable host;
@@ -30,12 +29,9 @@ contract BatchLiquidator {
      * @param senders - List of senders.
      * @param receivers - Corresponding list of receivers.
      */
-    function deleteFlows(
-        address superToken,
-        address[] calldata senders, address[] calldata receivers
-    ) external {
+    function deleteFlows(address superToken, address[] calldata senders, address[] calldata receivers) external {
         uint256 length = senders.length;
-        if(length != receivers.length) revert ARRAY_SIZES_DIFFERENT();
+        if (length != receivers.length) revert ARRAY_SIZES_DIFFERENT();
         for (uint256 i; i < length;) {
             // We tolerate any errors occured during liquidations.
             // It could be due to flow had been liquidated by others.
@@ -47,18 +43,15 @@ contract BatchLiquidator {
                         ISuperAgreement(cfa),
                         abi.encodeCall(
                             IConstantFlowAgreementV1(cfa).deleteFlow,
-                            (
-                                ISuperToken(superToken),
-                                senders[i],
-                                receivers[i],
-                                new bytes(0)
-                            )
-                        ),
+                            (ISuperToken(superToken), senders[i], receivers[i], new bytes(0))
+                            ),
                         new bytes(0)
                     )
                 )
             );
-            unchecked { i++; }
+            unchecked {
+                i++;
+            }
         }
 
         // If the liquidation(s) resulted in any super token
@@ -82,13 +75,8 @@ contract BatchLiquidator {
                     ISuperAgreement(cfa),
                     abi.encodeCall(
                         IConstantFlowAgreementV1(cfa).deleteFlow,
-                        (
-                            ISuperToken(superToken),
-                            sender,
-                            receiver,
-                            new bytes(0)
-                        )
-                    ),
+                        (ISuperToken(superToken), sender, receiver, new bytes(0))
+                        ),
                     new bytes(0)
                 )
             )

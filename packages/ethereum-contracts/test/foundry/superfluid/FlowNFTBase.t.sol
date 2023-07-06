@@ -27,10 +27,10 @@ abstract contract FlowNFTBaseTest is FoundrySuperfluidTester {
     using SuperTokenV1Library for SuperTokenMock;
     using SuperTokenV1Library for SuperToken;
 
-    string constant internal OUTFLOW_NFT_NAME_TEMPLATE = "Constant Outflow NFT";
-    string constant internal OUTFLOW_NFT_SYMBOL_TEMPLATE = "COF";
-    string constant internal INFLOW_NFT_NAME_TEMPLATE = "Constant Inflow NFT";
-    string constant internal INFLOW_NFT_SYMBOL_TEMPLATE = "CIF";
+    string internal constant OUTFLOW_NFT_NAME_TEMPLATE = "Constant Outflow NFT";
+    string internal constant OUTFLOW_NFT_SYMBOL_TEMPLATE = "COF";
+    string internal constant INFLOW_NFT_NAME_TEMPLATE = "Constant Inflow NFT";
+    string internal constant INFLOW_NFT_SYMBOL_TEMPLATE = "CIF";
 
     SuperTokenMock public superTokenMock;
 

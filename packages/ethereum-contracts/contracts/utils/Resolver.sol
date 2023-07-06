@@ -4,7 +4,6 @@ pragma solidity >=0.8.4;
 import { AccessControlEnumerable } from "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import { IResolver } from "../interfaces/utils/IResolver.sol";
 
-
 /**
  * @title Resolver contract
  * @author Superfluid
@@ -16,7 +15,6 @@ import { IResolver } from "../interfaces/utils/IResolver.sol";
  * - IResolver event `Set`: resolver name updates
  */
 contract Resolver is IResolver, AccessControlEnumerable {
-
     mapping(string => address) private _registry;
 
     constructor() {
@@ -32,5 +30,4 @@ contract Resolver is IResolver, AccessControlEnumerable {
     function get(string calldata name) external view override returns (address) {
         return _registry[name];
     }
-
 }

@@ -2,18 +2,15 @@
 pragma solidity >= 0.8.4;
 pragma experimental ABIEncoderV2;
 
-import {ISuperfluid, ISuperfluidToken} from "../interfaces/superfluid/ISuperfluid.sol";
+import { ISuperfluid, ISuperfluidToken } from "../interfaces/superfluid/ISuperfluid.sol";
 
-import {
-    IInstantDistributionAgreementV1
-} from "../interfaces/agreements/IInstantDistributionAgreementV1.sol";
+import { IInstantDistributionAgreementV1 } from "../interfaces/agreements/IInstantDistributionAgreementV1.sol";
 
 /// @title Instant Distribution Agreement V1 helper library for solidity development.
 /// @author Superfluid
 /// @dev Set a variable of type `InitData` in the contract, then call this library's functions
 /// directly `initData.functionName()`.
 library IDAv1Library {
-
     /// @dev Initialization data.
     /// @param host Superfluid host contract for calling agreements.
     /// @param ida Instant Distribution Agreement contract.
@@ -22,9 +19,11 @@ library IDAv1Library {
         IInstantDistributionAgreementV1 ida;
     }
 
-    /**************************************************************************
+    /**
+     *
      * View Functions
-     *************************************************************************/
+     *
+     */
 
     /// @dev Gets an index by its ID and publisher.
     /// @param idaLibrary Storage pointer to host and ida interfaces.
@@ -35,20 +34,10 @@ library IDAv1Library {
     /// @return indexValue Total value of the index.
     /// @return totalUnitsApproved Units of the index approved by subscribers.
     /// @return totalUnitsPending Units of teh index not yet approved by subscribers.
-    function getIndex(
-        InitData storage idaLibrary,
-        ISuperfluidToken token,
-        address publisher,
-        uint32 indexId
-    )
+    function getIndex(InitData storage idaLibrary, ISuperfluidToken token, address publisher, uint32 indexId)
         internal
         view
-        returns (
-            bool exist,
-            uint128 indexValue,
-            uint128 totalUnitsApproved,
-            uint128 totalUnitsPending
-        )
+        returns (bool exist, uint128 indexValue, uint128 totalUnitsApproved, uint128 totalUnitsPending)
     {
         return idaLibrary.ida.getIndex(token, publisher, indexId);
     }
@@ -67,14 +56,7 @@ library IDAv1Library {
         address publisher,
         uint32 indexId,
         uint256 amount
-    )
-        internal
-        view
-        returns (
-            uint256 actualAmount,
-            uint128 newIndexValue
-        )
-    {
+    ) internal view returns (uint256 actualAmount, uint128 newIndexValue) {
         return idaLibrary.ida.calculateDistribution(token, publisher, indexId, amount);
     }
 
@@ -85,18 +67,10 @@ library IDAv1Library {
     /// @return publishers Publishers of the indices.
     /// @return indexIds IDs of the indices.
     /// @return unitsList Units owned of the indices.
-    function listSubscriptions(
-        InitData storage idaLibrary,
-        ISuperfluidToken token,
-        address subscriber
-    )
+    function listSubscriptions(InitData storage idaLibrary, ISuperfluidToken token, address subscriber)
         internal
         view
-        returns (
-            address[] memory publishers,
-            uint32[] memory indexIds,
-            uint128[] memory unitsList
-        )
+        returns (address[] memory publishers, uint32[] memory indexIds, uint128[] memory unitsList)
     {
         return idaLibrary.ida.listSubscriptions(token, subscriber);
     }
@@ -117,16 +91,7 @@ library IDAv1Library {
         address publisher,
         uint32 indexId,
         address subscriber
-    )
-        internal
-        view
-        returns (
-            bool exist,
-            bool approved,
-            uint128 units,
-            uint256 pendingDistribution
-        )
-    {
+    ) internal view returns (bool exist, bool approved, uint128 units, uint256 pendingDistribution) {
         return idaLibrary.ida.getSubscription(token, publisher, indexId, subscriber);
     }
 
@@ -139,37 +104,25 @@ library IDAv1Library {
     /// @return approved True if the subscription has been approved by the subscriber.
     /// @return units Units held by the subscriber
     /// @return pendingDistribution If not approved, the amount to be claimed on approval.
-    function getSubscriptionByID(
-        InitData storage idaLibrary,
-        ISuperfluidToken token,
-        bytes32 agreementId
-    )
+    function getSubscriptionByID(InitData storage idaLibrary, ISuperfluidToken token, bytes32 agreementId)
         internal
         view
-        returns (
-            address publisher,
-            uint32 indexId,
-            bool approved,
-            uint128 units,
-            uint256 pendingDistribution
-        )
+        returns (address publisher, uint32 indexId, bool approved, uint128 units, uint256 pendingDistribution)
     {
         return idaLibrary.ida.getSubscriptionByID(token, agreementId);
     }
 
-    /**************************************************************************
+    /**
+     *
      * Index Operations
-     *************************************************************************/
+     *
+     */
 
     /// @dev Creates a new index.
     /// @param idaLibrary Storage pointer to host and ida interfaces.
     /// @param token Super Token used with the index.
     /// @param indexId ID of the index.
-    function createIndex(
-        InitData storage idaLibrary,
-        ISuperfluidToken token,
-        uint32 indexId
-    ) internal {
+    function createIndex(InitData storage idaLibrary, ISuperfluidToken token, uint32 indexId) internal {
         createIndex(idaLibrary, token, indexId, new bytes(0));
     }
 
@@ -178,12 +131,9 @@ library IDAv1Library {
     /// @param token Super Token used with the index.
     /// @param indexId ID of the index.
     /// @param userData Arbitrary user data field.
-    function createIndex(
-        InitData storage idaLibrary,
-        ISuperfluidToken token,
-        uint32 indexId,
-        bytes memory userData
-    ) internal {
+    function createIndex(InitData storage idaLibrary, ISuperfluidToken token, uint32 indexId, bytes memory userData)
+        internal
+    {
         idaLibrary.host.callAgreement(
             idaLibrary.ida,
             abi.encodeCall(
@@ -203,12 +153,10 @@ library IDAv1Library {
     /// @param ctx Context byte string used by the Superfluid host.
     /// @param token Super Token used with the index.
     /// @param indexId ID of the index.
-    function createIndexWithCtx(
-        InitData storage idaLibrary,
-        bytes memory ctx,
-        ISuperfluidToken token,
-        uint32 indexId
-    ) internal returns (bytes memory newCtx) {
+    function createIndexWithCtx(InitData storage idaLibrary, bytes memory ctx, ISuperfluidToken token, uint32 indexId)
+        internal
+        returns (bytes memory newCtx)
+    {
         return createIndexWithCtx(idaLibrary, ctx, token, indexId, new bytes(0));
     }
 
@@ -225,7 +173,7 @@ library IDAv1Library {
         uint32 indexId,
         bytes memory userData
     ) internal returns (bytes memory newCtx) {
-        (newCtx, ) = idaLibrary.host.callAgreementWithContext(
+        (newCtx,) = idaLibrary.host.callAgreementWithContext(
             idaLibrary.ida,
             abi.encodeCall(
                 idaLibrary.ida.createIndex,
@@ -247,12 +195,9 @@ library IDAv1Library {
     /// @param token Super Token used with the index.
     /// @param indexId ID of the index.
     /// @param indexValue New TOTAL index value, this will equal the total amount distributed.
-    function updateIndexValue(
-        InitData storage idaLibrary,
-        ISuperfluidToken token,
-        uint32 indexId,
-        uint128 indexValue
-    ) internal {
+    function updateIndexValue(InitData storage idaLibrary, ISuperfluidToken token, uint32 indexId, uint128 indexValue)
+        internal
+    {
         updateIndexValue(idaLibrary, token, indexId, indexValue, new bytes(0));
     }
 
@@ -299,14 +244,7 @@ library IDAv1Library {
         uint32 indexId,
         uint128 indexValue
     ) internal returns (bytes memory newCtx) {
-        return updateIndexValueWithCtx(
-            idaLibrary,
-            ctx,
-            token,
-            indexId,
-            indexValue,
-            new bytes(0)
-        );
+        return updateIndexValueWithCtx(idaLibrary, ctx, token, indexId, indexValue, new bytes(0));
     }
 
     /// @dev Updates an index value in a super app callback. This distributes an amount of tokens
@@ -325,7 +263,7 @@ library IDAv1Library {
         uint128 indexValue,
         bytes memory userData
     ) internal returns (bytes memory newCtx) {
-        (newCtx, ) = idaLibrary.host.callAgreementWithContext(
+        (newCtx,) = idaLibrary.host.callAgreementWithContext(
             idaLibrary.ida,
             abi.encodeCall(
                 idaLibrary.ida.updateIndex,
@@ -343,32 +281,27 @@ library IDAv1Library {
 
     /**
      * @dev Distributes tokens in a more developer friendly way than `updateIndex`. Instead of
-     * passing the new total index value, you pass the amount of tokens desired to be distributed. 
+     * passing the new total index value, you pass the amount of tokens desired to be distributed.
      * @param token Super Token used with the index.
      * @param indexId ID of the index.
-     * @param amount - total number of tokens desired to be distributed 
-     * NOTE in many cases, there can be some precision loss 
-     This may cause a slight difference in the amount param specified and the actual amount distributed. 
-     See below for math:
-     //indexDelta = amount the index will be updated by during internal call to _updateIndex(). 
-     It is calculated like so:
-     indexDelta = amount / totalUnits 
-     (see distribute() implementatation in ./agreements/InstantDistributionAgreement.sol)
+     * @param amount - total number of tokens desired to be distributed
+     * NOTE in many cases, there can be some precision loss
+     *  This may cause a slight difference in the amount param specified and the actual amount distributed.
+     *  See below for math:
+     *  //indexDelta = amount the index will be updated by during internal call to _updateIndex().
+     *  It is calculated like so:
+     *  indexDelta = amount / totalUnits
+     *  (see distribute() implementatation in ./agreements/InstantDistributionAgreement.sol)
      * NOTE Solidity does not support floating point numbers
-     // So the indexDelta will be rounded down to the nearest integer. 
-     This will create a 'remainder' amount of tokens that will not be distributed 
-     (we'll call this the 'distribution modulo')
-     distributionModulo = amount - indexDelta * totalUnits
+     *  // So the indexDelta will be rounded down to the nearest integer.
+     *  This will create a 'remainder' amount of tokens that will not be distributed
+     *  (we'll call this the 'distribution modulo')
+     *  distributionModulo = amount - indexDelta * totalUnits
      * NOTE due to rounding, there may be a small amount of tokens left in the publisher's account
-     This amount is equal to the 'distributionModulo' value
-     //
+     *  This amount is equal to the 'distributionModulo' value
+     *  //
      */
-    function distribute(
-        InitData storage idaLibrary,
-        ISuperfluidToken token,
-        uint32 indexId,
-        uint256 amount
-    ) internal {
+    function distribute(InitData storage idaLibrary, ISuperfluidToken token, uint32 indexId, uint256 amount) internal {
         distribute(idaLibrary, token, indexId, amount, new bytes(0));
     }
 
@@ -436,7 +369,7 @@ library IDAv1Library {
         uint256 amount,
         bytes memory userData
     ) internal returns (bytes memory newCtx) {
-        (newCtx, ) = idaLibrary.host.callAgreementWithContext(
+        (newCtx,) = idaLibrary.host.callAgreementWithContext(
             idaLibrary.ida,
             abi.encodeCall(
                 idaLibrary.ida.distribute,
@@ -452,9 +385,11 @@ library IDAv1Library {
         );
     }
 
-    /**************************************************************************
+    /**
+     *
      * Subscription Operations
-     *************************************************************************/
+     *
+     */
 
     /// @dev Approves a subscription to an index. The subscriber's real time balance will not update
     /// until the subscription is approved, but once approved, the balance will be updated with
@@ -463,12 +398,9 @@ library IDAv1Library {
     /// @param token Super Token used with the index.
     /// @param publisher Publisher of the index.
     /// @param indexId ID of the index.
-    function approveSubscription(
-        InitData storage idaLibrary,
-        ISuperfluidToken token,
-        address publisher,
-        uint32 indexId
-    ) internal {
+    function approveSubscription(InitData storage idaLibrary, ISuperfluidToken token, address publisher, uint32 indexId)
+        internal
+    {
         approveSubscription(idaLibrary, token, publisher, indexId, new bytes(0));
     }
 
@@ -518,14 +450,7 @@ library IDAv1Library {
         address publisher,
         uint32 indexId
     ) internal returns (bytes memory newCtx) {
-        return approveSubscriptionWithCtx(
-            idaLibrary,
-            ctx,
-            token,
-            publisher,
-            indexId,
-            new bytes(0)
-        );
+        return approveSubscriptionWithCtx(idaLibrary, ctx, token, publisher, indexId, new bytes(0));
     }
 
     /// @dev Approves a subscription to an index in a super app callback. The subscriber's real time
@@ -545,7 +470,7 @@ library IDAv1Library {
         uint32 indexId,
         bytes memory userData
     ) internal returns (bytes memory newCtx) {
-        (newCtx, ) = idaLibrary.host.callAgreementWithContext(
+        (newCtx,) = idaLibrary.host.callAgreementWithContext(
             idaLibrary.ida,
             abi.encodeCall(
                 idaLibrary.ida.approveSubscription,
@@ -566,12 +491,9 @@ library IDAv1Library {
     /// @param token Super Token used with the index.
     /// @param publisher Publisher of the index.
     /// @param indexId ID of the index.
-    function revokeSubscription(
-        InitData storage idaLibrary,
-        ISuperfluidToken token,
-        address publisher,
-        uint32 indexId
-    ) internal {
+    function revokeSubscription(InitData storage idaLibrary, ISuperfluidToken token, address publisher, uint32 indexId)
+        internal
+    {
         revokeSubscription(idaLibrary, token, publisher, indexId, new bytes(0));
     }
 
@@ -616,14 +538,7 @@ library IDAv1Library {
         address publisher,
         uint32 indexId
     ) internal returns (bytes memory newCtx) {
-        return revokeSubscriptionWithCtx(
-            idaLibrary,
-            ctx,
-            token,
-            publisher,
-            indexId,
-            new bytes(0)
-        );
+        return revokeSubscriptionWithCtx(idaLibrary, ctx, token, publisher, indexId, new bytes(0));
     }
 
     /// @dev Revokes a previously approved subscription in a super app callback. This takes
@@ -642,7 +557,7 @@ library IDAv1Library {
         uint32 indexId,
         bytes memory userData
     ) internal returns (bytes memory newCtx) {
-        (newCtx, ) = idaLibrary.host.callAgreementWithContext(
+        (newCtx,) = idaLibrary.host.callAgreementWithContext(
             idaLibrary.ida,
             abi.encodeCall(
                 idaLibrary.ida.revokeSubscription,
@@ -723,15 +638,7 @@ library IDAv1Library {
         address subscriber,
         uint128 units
     ) internal returns (bytes memory newCtx) {
-        return updateSubscriptionUnitsWithCtx(
-            idaLibrary,
-            ctx,
-            token,
-            indexId,
-            subscriber,
-            units,
-            new bytes(0)
-        );
+        return updateSubscriptionUnitsWithCtx(idaLibrary, ctx, token, indexId, subscriber, units, new bytes(0));
     }
 
     /// @dev Updates the units of a subscription in a super app callback. This changes the number of
@@ -752,7 +659,7 @@ library IDAv1Library {
         uint128 units,
         bytes memory userData
     ) internal returns (bytes memory newCtx) {
-        (newCtx, ) = idaLibrary.host.callAgreementWithContext(
+        (newCtx,) = idaLibrary.host.callAgreementWithContext(
             idaLibrary.ida,
             abi.encodeCall(
                 idaLibrary.ida.updateSubscription,
@@ -832,15 +739,7 @@ library IDAv1Library {
         uint32 indexId,
         address subscriber
     ) internal returns (bytes memory newCtx) {
-        return deleteSubscriptionWithCtx(
-            idaLibrary,
-            ctx,
-            token,
-            publisher,
-            indexId,
-            subscriber,
-            new bytes(0)
-        );
+        return deleteSubscriptionWithCtx(idaLibrary, ctx, token, publisher, indexId, subscriber, new bytes(0));
     }
 
     /// @dev Deletes a subscription in a super app callback, setting a subcriber's units to zero.
@@ -861,7 +760,7 @@ library IDAv1Library {
         address subscriber,
         bytes memory userData
     ) internal returns (bytes memory newCtx) {
-        (newCtx, ) = idaLibrary.host.callAgreementWithContext(
+        (newCtx,) = idaLibrary.host.callAgreementWithContext(
             idaLibrary.ida,
             abi.encodeCall(
                 idaLibrary.ida.deleteSubscription,
@@ -941,15 +840,7 @@ library IDAv1Library {
         uint32 indexId,
         address subscriber
     ) internal returns (bytes memory newCtx) {
-        return claimWithCtx(
-            idaLibrary,
-            ctx,
-            token,
-            publisher,
-            indexId,
-            subscriber,
-            new bytes(0)
-        );
+        return claimWithCtx(idaLibrary, ctx, token, publisher, indexId, subscriber, new bytes(0));
     }
 
     /// @dev Claims pending distribution in a super app callback. Subscription should not be
@@ -969,7 +860,7 @@ library IDAv1Library {
         address subscriber,
         bytes memory userData
     ) internal returns (bytes memory newCtx) {
-        (newCtx, ) = idaLibrary.host.callAgreementWithContext(
+        (newCtx,) = idaLibrary.host.callAgreementWithContext(
             idaLibrary.ida,
             abi.encodeCall(
                 idaLibrary.ida.claim,

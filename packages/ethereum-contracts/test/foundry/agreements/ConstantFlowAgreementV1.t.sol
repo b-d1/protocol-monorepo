@@ -17,7 +17,7 @@ contract ConstantFlowAgreementV1IntegrationTest is FoundrySuperfluidTester {
 
     function testBobAliceLoop(int96 flowRate) public {
         _helperCreateFlow(superToken, alice, bob, flowRate);
-        
+
         _warpAndAssertAll(superToken);
 
         _helperCreateFlow(superToken, bob, alice, flowRate);

@@ -13,47 +13,36 @@ import {
 import { AgreementBase } from "../agreements/AgreementBase.sol";
 import { AgreementLibrary } from "../agreements/AgreementLibrary.sol";
 
-
 contract AgreementMock is AgreementBase {
-
     using SafeCast for uint256;
 
-    uint256 constant private _REAL_TIME_BALANCE_SLOT_ID = 65552025;
+    uint256 private constant _REAL_TIME_BALANCE_SLOT_ID = 65552025;
 
     // using immutable, otherweise the proxy contract would see zero instead
-    bytes32 immutable private _type;
-    uint immutable private _version;
+    bytes32 private immutable _type;
+    uint private immutable _version;
 
     constructor(address host, bytes32 t, uint v) AgreementBase(host) {
         _type = t;
         _version = v;
     }
 
-    function version() external view returns (uint) { return _version; }
+    function version() external view returns (uint) {
+        return _version;
+    }
 
-    function agreementType() external override view returns (bytes32) {
+    function agreementType() external view override returns (bytes32) {
         return _type;
     }
 
-    function realtimeBalanceOf(
-       ISuperfluidToken token,
-       address account,
-       uint256 /* time */
-    )
-       external view override
-       returns (
-           int256 dynamicBalance,
-           uint256 deposit,
-           uint256 owedDeposit
-       )
+    function realtimeBalanceOf(ISuperfluidToken token, address account, uint256 /* time */ )
+        external
+        view
+        override
+        returns (int256 dynamicBalance, uint256 deposit, uint256 owedDeposit)
     {
-        bytes32[] memory slotData = token.getAgreementStateSlot(
-            address(this), account, _REAL_TIME_BALANCE_SLOT_ID, 3);
-        return (
-            uint256(slotData[0]).toInt256(),
-            uint256(slotData[1]),
-            uint256(slotData[2])
-        );
+        bytes32[] memory slotData = token.getAgreementStateSlot(address(this), account, _REAL_TIME_BALANCE_SLOT_ID, 3);
+        return (uint256(slotData[0]).toInt256(), uint256(slotData[1]), uint256(slotData[2]));
     }
 
     /**
@@ -74,27 +63,15 @@ contract AgreementMock is AgreementBase {
         token.updateAgreementStateSlot(account, _REAL_TIME_BALANCE_SLOT_ID, slotData);
     }
 
-    function createAgreementFor(
-        ISuperfluidToken token,
-        bytes32 id,
-        bytes32[] calldata data
-        ) external {
+    function createAgreementFor(ISuperfluidToken token, bytes32 id, bytes32[] calldata data) external {
         token.createAgreement(id, data);
     }
 
-    function updateAgreementDataFor(
-        ISuperfluidToken token,
-        bytes32 id,
-        bytes32[] calldata data
-        ) external {
+    function updateAgreementDataFor(ISuperfluidToken token, bytes32 id, bytes32[] calldata data) external {
         token.updateAgreementData(id, data);
     }
 
-    function terminateAgreementFor(
-        ISuperfluidToken token,
-        bytes32 id,
-        uint dataLength
-        ) external {
+    function terminateAgreementFor(ISuperfluidToken token, bytes32 id, uint dataLength) external {
         token.terminateAgreement(id, dataLength);
     }
 
@@ -103,15 +80,11 @@ contract AgreementMock is AgreementBase {
         address account,
         uint256 slotId,
         bytes32[] calldata slotData
-        ) external {
+    ) external {
         token.updateAgreementStateSlot(account, slotId, slotData);
     }
 
-    function settleBalanceFor(
-        ISuperfluidToken token,
-        address account,
-        int256 delta
-        ) external {
+    function settleBalanceFor(ISuperfluidToken token, address account, int256 delta) external {
         token.settleBalance(account, delta);
     }
 
@@ -124,9 +97,7 @@ contract AgreementMock is AgreementBase {
         uint256 rewardAmount,
         int256 targetAccountBalanceDelta
     ) external {
-        bytes memory liquidationTypeData = useDefaultRewardAccount
-            ? abi.encode(1, 0)
-            : abi.encode(1, 2);
+        bytes memory liquidationTypeData = useDefaultRewardAccount ? abi.encode(1, 0) : abi.encode(1, 2);
         token.makeLiquidationPayoutsV2(
             id,
             liquidationTypeData,
@@ -143,7 +114,8 @@ contract AgreementMock is AgreementBase {
      */
 
     function tryCallAppBeforeCallback(ISuperfluid host, ISuperApp appMock, bool hackCtx, bytes calldata ctx)
-        external returns (bytes memory newCtx)
+        external
+        returns (bytes memory newCtx)
     {
         return host.callAppBeforeCallback(
             appMock,
@@ -158,11 +130,13 @@ contract AgreementMock is AgreementBase {
                 )
             ),
             true, /* isTermination */
-            hackCtx ? new bytes(0) : ctx);
+            hackCtx ? new bytes(0) : ctx
+        );
     }
 
     function tryCallAppAfterCallback(ISuperfluid host, ISuperApp appMock, bool hackCtx, bytes calldata ctx)
-        external returns (bytes memory newCtx)
+        external
+        returns (bytes memory newCtx)
     {
         return host.callAppAfterCallback(
             appMock,
@@ -178,29 +152,31 @@ contract AgreementMock is AgreementBase {
                 )
             ),
             true, /* isTermination */
-            hackCtx ? new bytes(0) : ctx);
+            hackCtx ? new bytes(0) : ctx
+        );
     }
 
     function tryAppCallbackPush(ISuperfluid host, ISuperApp appMock, bool hackCtx, bytes calldata ctx)
-        external returns (bytes memory newCtx)
+        external
+        returns (bytes memory newCtx)
     {
         return host.appCallbackPush(hackCtx ? new bytes(0) : ctx, appMock, 0, 0, ISuperfluidToken(address(0)));
     }
 
-    function tryAppCallbackPop(ISuperfluid host, bytes calldata ctx)
-        external returns (bytes memory newCtx)
-    {
+    function tryAppCallbackPop(ISuperfluid host, bytes calldata ctx) external returns (bytes memory newCtx) {
         return host.appCallbackPop(ctx, 0);
     }
 
     function tryCtxUseCredit(ISuperfluid host, bool hackCtx, bytes calldata ctx)
-        external returns (bytes memory newCtx)
+        external
+        returns (bytes memory newCtx)
     {
         return host.ctxUseCredit(hackCtx ? new bytes(0) : ctx, 0);
     }
 
     function tryJailApp(ISuperfluid host, ISuperApp appMock, bool hackCtx, bytes calldata ctx)
-        external returns (bytes memory newCtx)
+        external
+        returns (bytes memory newCtx)
     {
         return host.jailApp(hackCtx ? new bytes(0) : ctx, appMock, 0);
     }
@@ -238,54 +214,34 @@ contract AgreementMock is AgreementBase {
      */
 
     /// _callAppBeforeCallback base agreement operation, emits AppBeforeCallbackResult event
-    event AppBeforeCallbackResult(
-        uint8 appLevel,
-        uint8 callType,
-        bytes4 agreementSelector,
-        bytes cbdata);
+    event AppBeforeCallbackResult(uint8 appLevel, uint8 callType, bytes4 agreementSelector, bytes cbdata);
 
-    function _callAppBeforeCallback(
-        ISuperApp app,
-        uint256 noopBit,
-        bytes calldata ctx
-    )
-        private
-    {
+    function _callAppBeforeCallback(ISuperApp app, uint256 noopBit, bytes calldata ctx) private {
         ISuperfluid.Context memory context = ISuperfluid(msg.sender).decodeCtx(ctx);
         AgreementLibrary.CallbackInputs memory cbStates = AgreementLibrary.createCallbackInputs(
-            ISuperfluidToken(address(0)) /* token */,
-            address(app) /* account */,
-            0 /* agreementId */,
+            ISuperfluidToken(address(0)), /* token */
+            address(app), /* account */
+            0, /* agreementId */
             "" /* agreementData */
         );
         cbStates.noopBit = noopBit;
         bytes memory cbdata = AgreementLibrary.callAppBeforeCallback(cbStates, ctx);
-        emit AppBeforeCallbackResult(
-            context.appCallbackLevel,
-            context.callType,
-            context.agreementSelector,
-            cbdata);
+        emit AppBeforeCallbackResult(context.appCallbackLevel, context.callType, context.agreementSelector, cbdata);
     }
 
     /// _callAppAfterAgreementCallback base agreement operation, emits AppAfterCallbackResult event
-    event AppAfterCallbackResult(
-        uint8 appLevel,
-        uint8 callType,
-        bytes4 agreementSelector);
+    event AppAfterCallbackResult(uint8 appLevel, uint8 callType, bytes4 agreementSelector);
 
-    function _callAppAfterAgreementCallback(
-        ISuperApp app,
-        uint256 noopBit,
-        bytes calldata ctx
-    )
-        private returns (bytes memory newCtx)
+    function _callAppAfterAgreementCallback(ISuperApp app, uint256 noopBit, bytes calldata ctx)
+        private
+        returns (bytes memory newCtx)
     {
         bool isJailed = ISuperfluid(msg.sender).isAppJailed(app);
         ISuperfluid.Context memory context = ISuperfluid(msg.sender).decodeCtx(ctx);
         AgreementLibrary.CallbackInputs memory cbStates = AgreementLibrary.createCallbackInputs(
-            ISuperfluidToken(address(0)) /* token */,
-            address(app) /* account */,
-            0 /* agreementId */,
+            ISuperfluidToken(address(0)), /* token */
+            address(app), /* account */
+            0, /* agreementId */
             "" /* agreementData */
         );
         cbStates.noopBit = noopBit;
@@ -297,16 +253,10 @@ contract AgreementMock is AgreementBase {
         } else {
             require(ISuperfluid(msg.sender).isCtxValid(newCtx), "AgreementMock: ctx not valid after callback");
         }
-        emit AppAfterCallbackResult(
-            context.appCallbackLevel,
-            context.callType,
-            context.agreementSelector);
+        emit AppAfterCallbackResult(context.appCallbackLevel, context.callType, context.agreementSelector);
     }
 
-    function callAppBeforeAgreementCreatedCallback(
-        ISuperApp app,
-        bytes calldata ctx
-    )
+    function callAppBeforeAgreementCreatedCallback(ISuperApp app, bytes calldata ctx)
         external
         requireValidCtx(ctx)
         returns (bytes memory newCtx)
@@ -315,10 +265,7 @@ contract AgreementMock is AgreementBase {
         return ctx;
     }
 
-    function callAppAfterAgreementCreatedCallback(
-        ISuperApp app,
-        bytes calldata ctx
-    )
+    function callAppAfterAgreementCreatedCallback(ISuperApp app, bytes calldata ctx)
         external
         requireValidCtx(ctx)
         returns (bytes memory newCtx)
@@ -326,10 +273,7 @@ contract AgreementMock is AgreementBase {
         return _callAppAfterAgreementCallback(app, SuperAppDefinitions.AFTER_AGREEMENT_CREATED_NOOP, ctx);
     }
 
-    function callAppBeforeAgreementUpdatedCallback(
-        ISuperApp app,
-        bytes calldata ctx
-    )
+    function callAppBeforeAgreementUpdatedCallback(ISuperApp app, bytes calldata ctx)
         external
         requireValidCtx(ctx)
         returns (bytes memory newCtx)
@@ -338,10 +282,7 @@ contract AgreementMock is AgreementBase {
         return ctx;
     }
 
-    function callAppAfterAgreementUpdatedCallback(
-        ISuperApp app,
-        bytes calldata ctx
-    )
+    function callAppAfterAgreementUpdatedCallback(ISuperApp app, bytes calldata ctx)
         external
         requireValidCtx(ctx)
         returns (bytes memory newCtx)
@@ -349,10 +290,7 @@ contract AgreementMock is AgreementBase {
         return _callAppAfterAgreementCallback(app, SuperAppDefinitions.AFTER_AGREEMENT_UPDATED_NOOP, ctx);
     }
 
-    function callAppBeforeAgreementTerminatedCallback(
-        ISuperApp app,
-        bytes calldata ctx
-    )
+    function callAppBeforeAgreementTerminatedCallback(ISuperApp app, bytes calldata ctx)
         external
         requireValidCtx(ctx)
         returns (bytes memory newCtx)
@@ -361,15 +299,11 @@ contract AgreementMock is AgreementBase {
         newCtx = ctx;
     }
 
-    function callAppAfterAgreementTerminatedCallback(
-        ISuperApp app,
-        bytes calldata ctx
-    )
+    function callAppAfterAgreementTerminatedCallback(ISuperApp app, bytes calldata ctx)
         external
         requireValidCtx(ctx)
         returns (bytes memory newCtx)
     {
         return _callAppAfterAgreementCallback(app, SuperAppDefinitions.AFTER_AGREEMENT_TERMINATED_NOOP, ctx);
     }
-
 }

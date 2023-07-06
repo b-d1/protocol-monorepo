@@ -31,10 +31,7 @@ contract ConstantOutflowNFTMock is ConstantOutflowNFT {
 }
 
 contract ConstantInflowNFTMock is ConstantInflowNFT {
-    constructor(
-        ISuperfluid host,
-        IConstantOutflowNFT constantOutflowNFT
-    ) ConstantInflowNFT(host, constantOutflowNFT) { }
+    constructor(ISuperfluid host, IConstantOutflowNFT constantOutflowNFT) ConstantInflowNFT(host, constantOutflowNFT) { }
 
     /// @dev a mock mint function to emit the mint Transfer event
     function mockMint(address _to, uint256 _newTokenId) public {

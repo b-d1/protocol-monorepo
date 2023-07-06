@@ -4,7 +4,6 @@ pragma solidity 0.8.19;
 import { UUPSUtils } from "./UUPSUtils.sol";
 import { Proxy } from "@openzeppelin/contracts/proxy/Proxy.sol";
 
-
 /**
  * @title UUPS (Universal Upgradeable Proxy Standard) Proxy
  *
@@ -16,7 +15,6 @@ import { Proxy } from "@openzeppelin/contracts/proxy/Proxy.sol";
  * - It defines a fallback function that delegates all calls to the implementation.
  */
 contract UUPSProxy is Proxy {
-
     /**
      * @dev Proxy initialization function.
      *      This should only be called once and it is permission-less.
@@ -29,9 +27,7 @@ contract UUPSProxy is Proxy {
     }
 
     /// @dev Proxy._implementation implementation
-    function _implementation() internal virtual override view returns (address)
-    {
+    function _implementation() internal view virtual override returns (address) {
         return UUPSUtils.implementation();
     }
-
 }

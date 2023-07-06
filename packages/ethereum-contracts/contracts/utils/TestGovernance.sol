@@ -1,24 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.4;
 
-import {
-    ISuperfluid,
-    ISuperfluidToken
-} from "../interfaces/superfluid/ISuperfluid.sol";
+import { ISuperfluid, ISuperfluidToken } from "../interfaces/superfluid/ISuperfluid.sol";
 import { SuperfluidGovernanceBase } from "../gov/SuperfluidGovernanceBase.sol";
 
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-
 
 /**
  * @title Test governance contract
  * @author Superfluid
  * @dev A initializable version of the governance for testing purpose
  */
-contract TestGovernance is
-    Ownable,
-    SuperfluidGovernanceBase
-{
+contract TestGovernance is Ownable, SuperfluidGovernanceBase {
     ISuperfluid private _host;
 
     function initialize(
@@ -27,9 +20,7 @@ contract TestGovernance is
         uint256 liquidationPeriod,
         uint256 patricianPeriod,
         address[] calldata trustedForwarders
-    )
-        external
-    {
+    ) external {
         // can initialize only once
         assert(address(host) != address(0));
         assert(address(_host) == address(0));
@@ -45,9 +36,7 @@ contract TestGovernance is
         }
     }
 
-    function _requireAuthorised(ISuperfluid host)
-        internal view override
-    {
+    function _requireAuthorised(ISuperfluid host) internal view override {
         assert(host == _host);
         assert(owner() == _msgSender());
     }

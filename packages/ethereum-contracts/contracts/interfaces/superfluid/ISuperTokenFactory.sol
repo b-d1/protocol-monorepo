@@ -3,31 +3,29 @@ pragma solidity >= 0.8.4;
 
 import { ISuperToken } from "./ISuperToken.sol";
 
-import {
-    IERC20,
-    ERC20WithTokenInfo
-} from "../tokens/ERC20WithTokenInfo.sol";
+import { IERC20, ERC20WithTokenInfo } from "../tokens/ERC20WithTokenInfo.sol";
 
 /**
  * @title Super token factory interface
  * @author Superfluid
  */
 interface ISuperTokenFactory {
-
-    /**************************************************************************
+    /**
+     *
      * Errors
-     *************************************************************************/
-    error SUPER_TOKEN_FACTORY_ALREADY_EXISTS();                 // 0x91d67972
-    error SUPER_TOKEN_FACTORY_DOES_NOT_EXIST();                 // 0x872cac48
-    error SUPER_TOKEN_FACTORY_UNINITIALIZED();                  // 0x1b39b9b4
-    error SUPER_TOKEN_FACTORY_ONLY_HOST();                      // 0x478b8e83
-    error SUPER_TOKEN_FACTORY_NON_UPGRADEABLE_IS_DEPRECATED();  // 0x478b8e83
-    error SUPER_TOKEN_FACTORY_ZERO_ADDRESS();                   // 0x305c9e82
+     *
+     */
+    error SUPER_TOKEN_FACTORY_ALREADY_EXISTS(); // 0x91d67972
+    error SUPER_TOKEN_FACTORY_DOES_NOT_EXIST(); // 0x872cac48
+    error SUPER_TOKEN_FACTORY_UNINITIALIZED(); // 0x1b39b9b4
+    error SUPER_TOKEN_FACTORY_ONLY_HOST(); // 0x478b8e83
+    error SUPER_TOKEN_FACTORY_NON_UPGRADEABLE_IS_DEPRECATED(); // 0x478b8e83
+    error SUPER_TOKEN_FACTORY_ZERO_ADDRESS(); // 0x305c9e82
 
     /**
      * @dev Get superfluid host contract address
      */
-    function getHost() external view returns(address host);
+    function getHost() external view returns (address host);
 
     /// @dev Initialize the contract
     function initialize() external;
@@ -40,8 +38,9 @@ interface ISuperTokenFactory {
     /**
      * @dev Upgradability modes
      */
-    enum Upgradability {
-        /// Non upgradable super token, `host.updateSuperTokenLogic` will revert
+    enum Upgradability
+    /// Non upgradable super token, `host.updateSuperTokenLogic` will revert
+    {
         NON_UPGRADABLE,
         /// Upgradable through `host.updateSuperTokenLogic` operation
         SEMI_UPGRADABLE,
@@ -64,9 +63,7 @@ interface ISuperTokenFactory {
         Upgradability upgradability,
         string calldata name,
         string calldata symbol
-    )
-        external
-        returns (ISuperToken superToken);
+    ) external returns (ISuperToken superToken);
 
     /**
      * @notice Create new super token wrapper for the underlying ERC20 token with extra token info
@@ -83,9 +80,7 @@ interface ISuperTokenFactory {
         Upgradability upgradability,
         string calldata name,
         string calldata symbol
-    )
-        external
-        returns (ISuperToken superToken);
+    ) external returns (ISuperToken superToken);
 
     /**
      * @notice Creates a wrapper super token AND sets it in the canonical list OR reverts if it already exists
@@ -93,9 +88,7 @@ interface ISuperTokenFactory {
      * @param _underlyingToken Underlying ERC20 token
      * @return ISuperToken the created supertoken
      */
-    function createCanonicalERC20Wrapper(ERC20WithTokenInfo _underlyingToken)
-        external
-        returns (ISuperToken);
+    function createCanonicalERC20Wrapper(ERC20WithTokenInfo _underlyingToken) external returns (ISuperToken);
 
     /**
      * @notice Computes/Retrieves wrapper super token address given the underlying token address
@@ -125,27 +118,23 @@ interface ISuperTokenFactory {
      * @dev Creates a new custom super token
      * @param customSuperTokenProxy address of the custom supertoken proxy
      */
-    function initializeCustomSuperToken(
-        address customSuperTokenProxy
-    )
-        external;
+    function initializeCustomSuperToken(address customSuperTokenProxy) external;
 
     /**
-      * @dev Super token logic created event
-      * @param tokenLogic Token logic address
-      */
+     * @dev Super token logic created event
+     * @param tokenLogic Token logic address
+     */
     event SuperTokenLogicCreated(ISuperToken indexed tokenLogic);
 
     /**
-      * @dev Super token created event
-      * @param token Newly created super token address
-      */
+     * @dev Super token created event
+     * @param token Newly created super token address
+     */
     event SuperTokenCreated(ISuperToken indexed token);
 
     /**
-      * @dev Custom super token created event
-      * @param token Newly created custom super token address
-      */
+     * @dev Custom super token created event
+     * @param token Newly created custom super token address
+     */
     event CustomSuperTokenCreated(ISuperToken indexed token);
-
 }

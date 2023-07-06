@@ -17,9 +17,7 @@ import { IStorageLayoutBase } from "./IStorageLayoutBase.sol";
 /// @notice A mock FlowNFTBase contract for testing storage layout.
 /// @dev This contract *MUST* have the same storage layout as FlowNFTBase.sol
 contract FlowNFTBaseStorageLayoutMock is FlowNFTBase, IStorageLayoutBase {
-    constructor(
-        ISuperfluid host
-    ) FlowNFTBase(host) {}
+    constructor(ISuperfluid host) FlowNFTBase(host) { }
 
     /// @notice Validates storage layout
     /// @dev This function is used by all the FlowNFTBase mock contracts to validate the layout
@@ -31,22 +29,40 @@ contract FlowNFTBaseStorageLayoutMock is FlowNFTBase, IStorageLayoutBase {
         // Initializable._initialized (uint8) 1byte
         // Initializable._initializing (bool) 1byte
 
-        assembly { slot := _name.slot offset := _name.offset }
+        assembly {
+            slot := _name.slot
+            offset := _name.offset
+        }
         if (slot != 1 || offset != 0) revert STORAGE_LOCATION_CHANGED("_name");
 
-        assembly { slot := _symbol.slot offset := _symbol.offset }
+        assembly {
+            slot := _symbol.slot
+            offset := _symbol.offset
+        }
         if (slot != 2 || offset != 0) revert STORAGE_LOCATION_CHANGED("_symbol");
-        
-        assembly { slot := _tokenApprovals.slot offset := _tokenApprovals.offset }
+
+        assembly {
+            slot := _tokenApprovals.slot
+            offset := _tokenApprovals.offset
+        }
         if (slot != 3 || offset != 0) revert STORAGE_LOCATION_CHANGED("_tokenApprovals");
 
-        assembly { slot := _operatorApprovals.slot offset := _operatorApprovals.offset }
+        assembly {
+            slot := _operatorApprovals.slot
+            offset := _operatorApprovals.offset
+        }
         if (slot != 4 || offset != 0) revert STORAGE_LOCATION_CHANGED("_operatorApprovals");
 
-        assembly { slot := _reserve5.slot offset := _reserve5.offset }
+        assembly {
+            slot := _reserve5.slot
+            offset := _reserve5.offset
+        }
         if (slot != 5 || offset != 0) revert STORAGE_LOCATION_CHANGED("_reserve5");
 
-        assembly { slot := _reserve21.slot offset := _reserve21.offset }
+        assembly {
+            slot := _reserve21.slot
+            offset := _reserve21.offset
+        }
         if (slot != 21 || offset != 0) revert STORAGE_LOCATION_CHANGED("_reserve21");
     }
 
@@ -57,18 +73,21 @@ contract FlowNFTBaseStorageLayoutMock is FlowNFTBase, IStorageLayoutBase {
         return flowData;
     }
     // Dummy implementations for abstract functions
+
     function _ownerOf(
         uint256 //tokenId
-        ) internal pure override returns (address) {
+    ) internal pure override returns (address) {
         return address(0);
     }
+
     function _transfer(
         address, //from,
         address, //to,
-        uint256  //tokenId
+        uint256 //tokenId
     ) internal pure override {
         return;
     }
+
     function _safeTransfer(
         address from,
         address to,
@@ -77,6 +96,7 @@ contract FlowNFTBaseStorageLayoutMock is FlowNFTBase, IStorageLayoutBase {
     ) internal override {
         _transfer(from, to, tokenId);
     }
+
     function proxiableUUID() public pure override returns (bytes32) {
         return keccak256("");
     }
@@ -86,17 +106,12 @@ contract FlowNFTBaseStorageLayoutMock is FlowNFTBase, IStorageLayoutBase {
     }
 }
 
-
 /// @title ConstantInflowNFTStorageLayoutMock
 /// @author Superfluid
 /// @notice A mock ConstantOutflowNFT contract for testing storage layout.
 /// @dev This contract *MUST* have the same storage layout as ConstantOutflowNFT.sol
 contract ConstantInflowNFTStorageLayoutMock is ConstantInflowNFT, IStorageLayoutBase {
-
-    constructor(
-        ISuperfluid host,
-        IConstantOutflowNFT constantOutflowNFT
-    ) ConstantInflowNFT(host, constantOutflowNFT) {}
+    constructor(ISuperfluid host, IConstantOutflowNFT constantOutflowNFT) ConstantInflowNFT(host, constantOutflowNFT) { }
 
     /// @notice Validates storage layout
     /// @dev This function is used to validate storage layout of ConstantInflowNFT
@@ -108,38 +123,58 @@ contract ConstantInflowNFTStorageLayoutMock is ConstantInflowNFT, IStorageLayout
         // Initializable._initialized (uint8) 1byte
         // Initializable._initializing (bool) 1byte
 
-        assembly { slot := _name.slot offset := _name.offset }
+        assembly {
+            slot := _name.slot
+            offset := _name.offset
+        }
         if (slot != 1 || offset != 0) revert STORAGE_LOCATION_CHANGED("_name");
 
-        assembly { slot := _symbol.slot offset := _symbol.offset }
+        assembly {
+            slot := _symbol.slot
+            offset := _symbol.offset
+        }
         if (slot != 2 || offset != 0) revert STORAGE_LOCATION_CHANGED("_symbol");
 
-        assembly { slot := _tokenApprovals.slot offset := _tokenApprovals.offset }
+        assembly {
+            slot := _tokenApprovals.slot
+            offset := _tokenApprovals.offset
+        }
         if (slot != 3 || offset != 0) revert STORAGE_LOCATION_CHANGED("_tokenApprovals");
 
-        assembly { slot := _operatorApprovals.slot offset := _operatorApprovals.offset }
+        assembly {
+            slot := _operatorApprovals.slot
+            offset := _operatorApprovals.offset
+        }
         if (slot != 4 || offset != 0) revert STORAGE_LOCATION_CHANGED("_operatorApprovals");
 
-        assembly { slot := _reserve5.slot offset := _reserve5.offset }
+        assembly {
+            slot := _reserve5.slot
+            offset := _reserve5.offset
+        }
         if (slot != 5 || offset != 0) revert STORAGE_LOCATION_CHANGED("_reserve5");
 
-        assembly { slot := _reserve21.slot offset := _reserve21.offset }
+        assembly {
+            slot := _reserve21.slot
+            offset := _reserve21.offset
+        }
         if (slot != 21 || offset != 0) revert STORAGE_LOCATION_CHANGED("_reserve21");
     }
 
     // Dummy implementations for abstract functions
     function _ownerOf(
         uint256 //tokenId
-        ) internal pure override returns (address) {
+    ) internal pure override returns (address) {
         return address(0);
     }
+
     function _transfer(
         address, //from,
         address, //to,
-        uint256  //tokenId
+        uint256 //tokenId
     ) internal pure override {
         return;
     }
+
     function _safeTransfer(
         address from,
         address to,
@@ -155,11 +190,7 @@ contract ConstantInflowNFTStorageLayoutMock is ConstantInflowNFT, IStorageLayout
 /// @notice A mock ConstantOutflowNFT contract for testing storage layout.
 /// @dev This contract *MUST* have the same storage layout as ConstantOutflowNFT.sol
 contract ConstantOutflowNFTStorageLayoutMock is ConstantOutflowNFT, IStorageLayoutBase {
-
-    constructor(
-        ISuperfluid host,
-        IConstantInflowNFT constantInflowNFT
-    ) ConstantOutflowNFT(host, constantInflowNFT) {}
+    constructor(ISuperfluid host, IConstantInflowNFT constantInflowNFT) ConstantOutflowNFT(host, constantInflowNFT) { }
 
     /// @notice Validates storage layout
     /// @dev This function is used to validate storage layout of ConstantOutflowNFT
@@ -171,41 +202,64 @@ contract ConstantOutflowNFTStorageLayoutMock is ConstantOutflowNFT, IStorageLayo
         // Initializable._initialized (uint8) 1byte
         // Initializable._initializing (bool) 1byte
 
-        assembly { slot := _name.slot offset := _name.offset }
+        assembly {
+            slot := _name.slot
+            offset := _name.offset
+        }
         if (slot != 1 || offset != 0) revert STORAGE_LOCATION_CHANGED("_name");
 
-        assembly { slot := _symbol.slot offset := _symbol.offset }
+        assembly {
+            slot := _symbol.slot
+            offset := _symbol.offset
+        }
         if (slot != 2 || offset != 0) revert STORAGE_LOCATION_CHANGED("_symbol");
 
-        assembly { slot := _tokenApprovals.slot offset := _tokenApprovals.offset }
+        assembly {
+            slot := _tokenApprovals.slot
+            offset := _tokenApprovals.offset
+        }
         if (slot != 3 || offset != 0) revert STORAGE_LOCATION_CHANGED("_tokenApprovals");
 
-        assembly { slot := _operatorApprovals.slot offset := _operatorApprovals.offset }
+        assembly {
+            slot := _operatorApprovals.slot
+            offset := _operatorApprovals.offset
+        }
         if (slot != 4 || offset != 0) revert STORAGE_LOCATION_CHANGED("_operatorApprovals");
 
-        assembly { slot := _reserve5.slot offset := _reserve5.offset }
+        assembly {
+            slot := _reserve5.slot
+            offset := _reserve5.offset
+        }
         if (slot != 5 || offset != 0) revert STORAGE_LOCATION_CHANGED("_reserve5");
 
-        assembly { slot := _reserve21.slot offset := _reserve21.offset }
+        assembly {
+            slot := _reserve21.slot
+            offset := _reserve21.offset
+        }
         if (slot != 21 || offset != 0) revert STORAGE_LOCATION_CHANGED("_reserve21");
-        
-        assembly { slot := _flowDataByTokenId.slot offset := _flowDataByTokenId.offset }
+
+        assembly {
+            slot := _flowDataByTokenId.slot
+            offset := _flowDataByTokenId.offset
+        }
         if (slot != 22 || offset != 0) revert STORAGE_LOCATION_CHANGED("_flowDataByTokenId");
     }
 
     // Dummy implementations for abstract functions
     function _ownerOf(
         uint256 //tokenId
-        ) internal pure override returns (address) {
+    ) internal pure override returns (address) {
         return address(0);
     }
+
     function _transfer(
         address, //from,
         address, //to,
-        uint256  //tokenId
+        uint256 //tokenId
     ) internal pure override {
         return;
     }
+
     function _safeTransfer(
         address from,
         address to,

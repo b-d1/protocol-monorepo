@@ -8,13 +8,10 @@ import { IERC1820Registry } from "@openzeppelin/contracts/utils/introspection/IE
  * @author Superfluid
  */
 library ERC777Helper {
+    IERC1820Registry internal constant _ERC1820_REGISTRY = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
 
-    IERC1820Registry constant internal _ERC1820_REGISTRY =
-        IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
-
-    bytes32 constant internal _TOKENS_SENDER_INTERFACE_HASH = keccak256("ERC777TokensSender");
-    bytes32 constant internal _TOKENS_RECIPIENT_INTERFACE_HASH = keccak256("ERC777TokensRecipient");
-
+    bytes32 internal constant _TOKENS_SENDER_INTERFACE_HASH = keccak256("ERC777TokensSender");
+    bytes32 internal constant _TOKENS_RECIPIENT_INTERFACE_HASH = keccak256("ERC777TokensRecipient");
 
     /// @dev ERC777 operators support self structure
     struct Operators {
@@ -29,13 +26,14 @@ library ERC777Helper {
         _ERC1820_REGISTRY.setInterfaceImplementer(token, keccak256("ERC20Token"), address(this));
     }
 
-    function isOperatorFor(Operators storage self, address operator, address tokenHolder) internal view returns (bool) {
-        return operator == tokenHolder ||
-            (
-                self.defaultOperators[operator] &&
-                !self.revokedDefaultOperators[tokenHolder][operator]
-            ) ||
-            self.operators[tokenHolder][operator];
+    function isOperatorFor(Operators storage self, address operator, address tokenHolder)
+        internal
+        view
+        returns (bool)
+    {
+        return operator == tokenHolder
+            || (self.defaultOperators[operator] && !self.revokedDefaultOperators[tokenHolder][operator])
+            || self.operators[tokenHolder][operator];
     }
 
     function authorizeOperator(Operators storage self, address holder, address operator) internal {
@@ -69,5 +67,4 @@ library ERC777Helper {
             self.defaultOperators[operators[i]] = true;
         }
     }
-
 }

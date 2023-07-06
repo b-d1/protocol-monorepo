@@ -15,22 +15,40 @@ contract PoolNFTBaseStorageLayoutMock is PoolNFTBase, IStorageLayoutBase {
         uint256 slot;
         uint256 offset;
 
-        assembly { slot := _name.slot offset := _name.offset }
+        assembly {
+            slot := _name.slot
+            offset := _name.offset
+        }
         if (slot != 1 || offset != 0) revert STORAGE_LOCATION_CHANGED("_name");
 
-        assembly { slot := _symbol.slot offset := _symbol.offset }
+        assembly {
+            slot := _symbol.slot
+            offset := _symbol.offset
+        }
         if (slot != 2 || offset != 0) revert STORAGE_LOCATION_CHANGED("_symbol");
 
-        assembly { slot := _tokenApprovals.slot offset := _tokenApprovals.offset }
+        assembly {
+            slot := _tokenApprovals.slot
+            offset := _tokenApprovals.offset
+        }
         if (slot != 3 || offset != 0) revert STORAGE_LOCATION_CHANGED("_tokenApprovals");
 
-        assembly { slot := _operatorApprovals.slot offset := _operatorApprovals.offset }
+        assembly {
+            slot := _operatorApprovals.slot
+            offset := _operatorApprovals.offset
+        }
         if (slot != 4 || offset != 0) revert STORAGE_LOCATION_CHANGED("_operatorApprovals");
 
-        assembly { slot := _reserve5.slot offset := _reserve5.offset }
+        assembly {
+            slot := _reserve5.slot
+            offset := _reserve5.offset
+        }
         if (slot != 5 || offset != 0) revert STORAGE_LOCATION_CHANGED("_reserve5");
 
-        assembly { slot := _reserve21.slot offset := _reserve21.offset }
+        assembly {
+            slot := _reserve21.slot
+            offset := _reserve21.offset
+        }
         if (slot != 21 || offset != 0) revert STORAGE_LOCATION_CHANGED("_reserve21");
     }
 
@@ -74,25 +92,46 @@ contract PoolAdminNFTStorageLayoutMock is PoolAdminNFT, IStorageLayoutBase {
         uint256 slot;
         uint256 offset;
 
-        assembly { slot := _name.slot offset := _name.offset }
+        assembly {
+            slot := _name.slot
+            offset := _name.offset
+        }
         if (slot != 1 || offset != 0) revert STORAGE_LOCATION_CHANGED("_name");
 
-        assembly { slot := _symbol.slot offset := _symbol.offset }
+        assembly {
+            slot := _symbol.slot
+            offset := _symbol.offset
+        }
         if (slot != 2 || offset != 0) revert STORAGE_LOCATION_CHANGED("_symbol");
 
-        assembly { slot := _tokenApprovals.slot offset := _tokenApprovals.offset }
+        assembly {
+            slot := _tokenApprovals.slot
+            offset := _tokenApprovals.offset
+        }
         if (slot != 3 || offset != 0) revert STORAGE_LOCATION_CHANGED("_tokenApprovals");
 
-        assembly { slot := _operatorApprovals.slot offset := _operatorApprovals.offset }
+        assembly {
+            slot := _operatorApprovals.slot
+            offset := _operatorApprovals.offset
+        }
         if (slot != 4 || offset != 0) revert STORAGE_LOCATION_CHANGED("_operatorApprovals");
 
-        assembly { slot := _reserve5.slot offset := _reserve5.offset }
+        assembly {
+            slot := _reserve5.slot
+            offset := _reserve5.offset
+        }
         if (slot != 5 || offset != 0) revert STORAGE_LOCATION_CHANGED("_reserve5");
 
-        assembly { slot := _reserve21.slot offset := _reserve21.offset }
+        assembly {
+            slot := _reserve21.slot
+            offset := _reserve21.offset
+        }
         if (slot != 21 || offset != 0) revert STORAGE_LOCATION_CHANGED("_reserve21");
 
-        assembly { slot := _poolAdminDataByTokenId.slot offset := _poolAdminDataByTokenId.offset }
+        assembly {
+            slot := _poolAdminDataByTokenId.slot
+            offset := _poolAdminDataByTokenId.offset
+        }
         if (slot != 22 || offset != 0) revert STORAGE_LOCATION_CHANGED("_poolAdminDataByTokenId");
     }
 
@@ -128,25 +167,46 @@ contract PoolMemberNFTStorageLayoutMock is PoolMemberNFT, IStorageLayoutBase {
         uint256 slot;
         uint256 offset;
 
-        assembly { slot := _name.slot offset := _name.offset }
+        assembly {
+            slot := _name.slot
+            offset := _name.offset
+        }
         if (slot != 1 || offset != 0) revert STORAGE_LOCATION_CHANGED("_name");
 
-        assembly { slot := _symbol.slot offset := _symbol.offset }
+        assembly {
+            slot := _symbol.slot
+            offset := _symbol.offset
+        }
         if (slot != 2 || offset != 0) revert STORAGE_LOCATION_CHANGED("_symbol");
 
-        assembly { slot := _tokenApprovals.slot offset := _tokenApprovals.offset }
+        assembly {
+            slot := _tokenApprovals.slot
+            offset := _tokenApprovals.offset
+        }
         if (slot != 3 || offset != 0) revert STORAGE_LOCATION_CHANGED("_tokenApprovals");
 
-        assembly { slot := _operatorApprovals.slot offset := _operatorApprovals.offset }
+        assembly {
+            slot := _operatorApprovals.slot
+            offset := _operatorApprovals.offset
+        }
         if (slot != 4 || offset != 0) revert STORAGE_LOCATION_CHANGED("_operatorApprovals");
 
-        assembly { slot := _reserve5.slot offset := _reserve5.offset }
+        assembly {
+            slot := _reserve5.slot
+            offset := _reserve5.offset
+        }
         if (slot != 5 || offset != 0) revert STORAGE_LOCATION_CHANGED("_reserve5");
 
-        assembly { slot := _reserve21.slot offset := _reserve21.offset }
+        assembly {
+            slot := _reserve21.slot
+            offset := _reserve21.offset
+        }
         if (slot != 21 || offset != 0) revert STORAGE_LOCATION_CHANGED("_reserve21");
 
-        assembly { slot := _poolMemberDataByTokenId.slot offset := _poolMemberDataByTokenId.offset }
+        assembly {
+            slot := _poolMemberDataByTokenId.slot
+            offset := _poolMemberDataByTokenId.offset
+        }
         if (slot != 22 || offset != 0) revert STORAGE_LOCATION_CHANGED("_poolMemberDataByTokenId");
     }
 

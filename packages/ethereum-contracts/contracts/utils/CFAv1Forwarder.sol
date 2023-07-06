@@ -2,16 +2,10 @@
 pragma solidity 0.8.19;
 
 import {
-    ISuperfluid,
-    ISuperToken,
-    BatchOperation,
-    FlowOperatorDefinitions
+    ISuperfluid, ISuperToken, BatchOperation, FlowOperatorDefinitions
 } from "../interfaces/superfluid/ISuperfluid.sol";
-import {
-    IConstantFlowAgreementV1
-} from "../interfaces/agreements/IConstantFlowAgreementV1.sol";
+import { IConstantFlowAgreementV1 } from "../interfaces/agreements/IConstantFlowAgreementV1.sol";
 import { ForwarderBase } from "./ForwarderBase.sol";
-
 
 /**
  * @title CFAv1Forwarder
@@ -28,9 +22,9 @@ contract CFAv1Forwarder is ForwarderBase {
 
     // is tied to a specific instance of host and agreement contracts at deploy time
     constructor(ISuperfluid host) ForwarderBase(host) {
-        _cfa = IConstantFlowAgreementV1(address(_host.getAgreementClass(
-            keccak256("org.superfluid-finance.agreements.ConstantFlowAgreement.v1")
-        )));
+        _cfa = IConstantFlowAgreementV1(
+            address(_host.getAgreementClass(keccak256("org.superfluid-finance.agreements.ConstantFlowAgreement.v1")))
+        );
     }
 
     /**
@@ -47,7 +41,7 @@ contract CFAv1Forwarder is ForwarderBase {
      * @return bool
      */
     function setFlowrate(ISuperToken token, address receiver, int96 flowrate) external returns (bool) {
-       return _setFlowrateFrom(token, msg.sender, receiver, flowrate);
+        return _setFlowrateFrom(token, msg.sender, receiver, flowrate);
     }
 
     /**
@@ -59,12 +53,10 @@ contract CFAv1Forwarder is ForwarderBase {
      * @param flowrate The wanted flowrate in wad/second. Only positive values are valid here.
      * @return bool
      */
-    function setFlowrateFrom(
-        ISuperToken token,
-        address sender,
-        address receiver,
-        int96 flowrate
-    ) external returns (bool) {
+    function setFlowrateFrom(ISuperToken token, address sender, address receiver, int96 flowrate)
+        external
+        returns (bool)
+    {
         return _setFlowrateFrom(token, sender, receiver, flowrate);
     }
 
@@ -76,10 +68,8 @@ contract CFAv1Forwarder is ForwarderBase {
      * @param receiver The receiver of the flow
      * @return flowrate The flowrate from the sender to the receiver account. Returns 0 if no flow exists.
      */
-    function getFlowrate(ISuperToken token, address sender, address receiver) external view
-        returns(int96 flowrate)
-    {
-        (, flowrate, , ) = _cfa.getFlow(token, sender, receiver);
+    function getFlowrate(ISuperToken token, address sender, address receiver) external view returns (int96 flowrate) {
+        (, flowrate,,) = _cfa.getFlow(token, sender, receiver);
     }
 
     /**
@@ -93,8 +83,10 @@ contract CFAv1Forwarder is ForwarderBase {
      * @return deposit Deposit amount locked as security buffer during the lifetime of the flow
      * @return owedDeposit Extra deposit amount borrowed to a SuperApp receiver by the flow sender
      */
-    function getFlowInfo(ISuperToken token, address sender, address receiver) external view
-        returns(uint256 lastUpdated, int96 flowrate, uint256 deposit, uint256 owedDeposit)
+    function getFlowInfo(ISuperToken token, address sender, address receiver)
+        external
+        view
+        returns (uint256 lastUpdated, int96 flowrate, uint256 deposit, uint256 owedDeposit)
     {
         (lastUpdated, flowrate, deposit, owedDeposit) = _cfa.getFlow(token, sender, receiver);
     }
@@ -109,7 +101,9 @@ contract CFAv1Forwarder is ForwarderBase {
      * @param flowrate The flowrate for which the buffer amount is calculated
      * @return bufferAmount The buffer amount required for the given configuration.
      */
-    function getBufferAmountByFlowrate(ISuperToken token, int96 flowrate) external view
+    function getBufferAmountByFlowrate(ISuperToken token, int96 flowrate)
+        external
+        view
         returns (uint256 bufferAmount)
     {
         return _cfa.getDepositRequiredForFlowRate(token, flowrate);
@@ -121,9 +115,7 @@ contract CFAv1Forwarder is ForwarderBase {
      * @param account Account to query
      * @return flowrate The net flowrate (aggregate incoming minus aggregate outgoing flowrate), can be negative.
      */
-    function getAccountFlowrate(ISuperToken token, address account) external view
-        returns (int96 flowrate)
-    {
+    function getAccountFlowrate(ISuperToken token, address account) external view returns (int96 flowrate) {
         return _cfa.getNetFlow(token, account);
     }
 
@@ -137,7 +129,9 @@ contract CFAv1Forwarder is ForwarderBase {
      * @return deposit Aggregate deposit amount currently locked as security buffer for outgoing flows
      * @return owedDeposit Aggregate extra deposit amount currently borrowed to SuperApps receiving from this account
      */
-    function getAccountFlowInfo(ISuperToken token, address account) external view
+    function getAccountFlowInfo(ISuperToken token, address account)
+        external
+        view
         returns (uint256 lastUpdated, int96 flowrate, uint256 deposit, uint256 owedDeposit)
     {
         return _cfa.getAccountFlowInfo(token, account);
@@ -157,7 +151,8 @@ contract CFAv1Forwarder is ForwarderBase {
      * @return bool
      */
     function createFlow(ISuperToken token, address sender, address receiver, int96 flowrate, bytes memory userData)
-        external returns (bool)
+        external
+        returns (bool)
     {
         return _createFlow(token, sender, receiver, flowrate, userData);
     }
@@ -175,7 +170,8 @@ contract CFAv1Forwarder is ForwarderBase {
      * @return bool
      */
     function updateFlow(ISuperToken token, address sender, address receiver, int96 flowrate, bytes memory userData)
-        external returns (bool)
+        external
+        returns (bool)
     {
         return _updateFlow(token, sender, receiver, flowrate, userData);
     }
@@ -190,13 +186,9 @@ contract CFAv1Forwarder is ForwarderBase {
      * @param userData (optional) User data to be set. Should be set to zero if not needed.
      * @return bool
      */
-    function deleteFlow(
-        ISuperToken token,
-        address sender,
-        address receiver,
-        bytes memory userData
-    )
-        external returns (bool)
+    function deleteFlow(ISuperToken token, address sender, address receiver, bytes memory userData)
+        external
+        returns (bool)
     {
         return _deleteFlow(token, sender, receiver, userData);
     }
@@ -209,13 +201,9 @@ contract CFAv1Forwarder is ForwarderBase {
      * @param flowOperator Account to which permissions are granted
      * @return bool
      */
-    function grantPermissions(ISuperToken token, address flowOperator) external returns (bool)
-    {
+    function grantPermissions(ISuperToken token, address flowOperator) external returns (bool) {
         return _updateFlowOperatorPermissions(
-            token,
-            flowOperator,
-            FlowOperatorDefinitions.AUTHORIZE_FULL_CONTROL,
-            type(int96).max
+            token, flowOperator, FlowOperatorDefinitions.AUTHORIZE_FULL_CONTROL, type(int96).max
         );
     }
 
@@ -228,14 +216,8 @@ contract CFAv1Forwarder is ForwarderBase {
      * @param flowOperator Account from which permissions are revoked
      * @return bool
      */
-    function revokePermissions(ISuperToken token, address flowOperator) external returns (bool)
-    {
-        return _updateFlowOperatorPermissions(
-            token,
-            flowOperator,
-            0,
-            0
-        );
+    function revokePermissions(ISuperToken token, address flowOperator) external returns (bool) {
+        return _updateFlowOperatorPermissions(token, flowOperator, 0, 0);
     }
 
     /**
@@ -253,9 +235,7 @@ contract CFAv1Forwarder is ForwarderBase {
         address flowOperator,
         uint8 permissions,
         int96 flowrateAllowance
-    )
-        external returns (bool)
-    {
+    ) external returns (bool) {
         return _updateFlowOperatorPermissions(token, flowOperator, permissions, flowrateAllowance);
     }
 
@@ -267,22 +247,24 @@ contract CFAv1Forwarder is ForwarderBase {
      * @return permissions A bitmask of the permissions currently granted (or not) by `sender` to `flowOperator`
      * @return flowrateAllowance Max. flowrate in wad/second the flowOperator can set for individual flows.
      */
-    function getFlowOperatorPermissions(ISuperToken token, address sender, address flowOperator) external view
+    function getFlowOperatorPermissions(ISuperToken token, address sender, address flowOperator)
+        external
+        view
         returns (uint8 permissions, int96 flowrateAllowance)
     {
         (, permissions, flowrateAllowance) = _cfa.getFlowOperatorData(token, sender, flowOperator);
     }
 
-    /**************************************************************************
+    /**
+     *
      * Internal functions
-     *************************************************************************/
+     *
+     */
 
-    function _setFlowrateFrom(
-        ISuperToken token,
-        address sender,
-        address receiver,
-        int96 flowrate
-    ) internal returns (bool) {
+    function _setFlowrateFrom(ISuperToken token, address sender, address receiver, int96 flowrate)
+        internal
+        returns (bool)
+    {
         (, int96 prevFlowRate,,) = _cfa.getFlow(token, sender, receiver);
 
         if (flowrate > 0) {
@@ -302,17 +284,12 @@ contract CFAv1Forwarder is ForwarderBase {
         }
     }
 
-    function _createFlow(
-        ISuperToken token,
-        address sender,
-        address receiver,
-        int96 flowrate,
-        bytes memory userData
-    )
-        internal returns (bool)
+    function _createFlow(ISuperToken token, address sender, address receiver, int96 flowrate, bytes memory userData)
+        internal
+        returns (bool)
     {
-        bytes memory cfaCallData = sender == msg.sender ?
-            abi.encodeCall(
+        bytes memory cfaCallData = sender == msg.sender
+            ? abi.encodeCall(
                 _cfa.createFlow,
                 (
                     token,
@@ -320,8 +297,8 @@ contract CFAv1Forwarder is ForwarderBase {
                     flowrate,
                     new bytes(0) // placeholder
                 )
-            ) :
-            abi.encodeCall(
+            )
+            : abi.encodeCall(
                 _cfa.createFlowByOperator,
                 (
                     token,
@@ -335,17 +312,12 @@ contract CFAv1Forwarder is ForwarderBase {
         return _forwardBatchCall(address(_cfa), cfaCallData, userData);
     }
 
-    function _updateFlow(
-        ISuperToken token,
-        address sender,
-        address receiver,
-        int96 flowrate,
-        bytes memory userData
-    )
-        internal returns (bool)
+    function _updateFlow(ISuperToken token, address sender, address receiver, int96 flowrate, bytes memory userData)
+        internal
+        returns (bool)
     {
-        bytes memory cfaCallData = sender == msg.sender ?
-            abi.encodeCall(
+        bytes memory cfaCallData = sender == msg.sender
+            ? abi.encodeCall(
                 _cfa.updateFlow,
                 (
                     token,
@@ -353,8 +325,8 @@ contract CFAv1Forwarder is ForwarderBase {
                     flowrate,
                     new bytes(0) // placeholder
                 )
-            ) :
-            abi.encodeCall(
+            )
+            : abi.encodeCall(
                 _cfa.updateFlowByOperator,
                 (
                     token,
@@ -368,16 +340,12 @@ contract CFAv1Forwarder is ForwarderBase {
         return _forwardBatchCall(address(_cfa), cfaCallData, userData);
     }
 
-    function _deleteFlow(
-        ISuperToken token,
-        address sender,
-        address receiver,
-        bytes memory userData
-    )
-        internal returns (bool)
+    function _deleteFlow(ISuperToken token, address sender, address receiver, bytes memory userData)
+        internal
+        returns (bool)
     {
-        bytes memory cfaCallData = sender == msg.sender || receiver == msg.sender ?
-            abi.encodeCall(
+        bytes memory cfaCallData = sender == msg.sender || receiver == msg.sender
+            ? abi.encodeCall(
                 _cfa.deleteFlow,
                 (
                     token,
@@ -385,8 +353,8 @@ contract CFAv1Forwarder is ForwarderBase {
                     receiver,
                     new bytes(0) // placeholder
                 )
-            ) :
-            abi.encodeCall(
+            )
+            : abi.encodeCall(
                 _cfa.deleteFlowByOperator,
                 (
                     token,
@@ -404,20 +372,17 @@ contract CFAv1Forwarder is ForwarderBase {
         address flowOperator,
         uint8 permissions,
         int96 flowrateAllowance
-    )
-        internal returns (bool)
-    {
-        bytes memory cfaCallData =
-            abi.encodeCall(
-                _cfa.updateFlowOperatorPermissions,
-                (
-                    token,
-                    flowOperator,
-                    permissions,
-                    flowrateAllowance,
-                    new bytes(0) // placeholder
-                )
-            );
+    ) internal returns (bool) {
+        bytes memory cfaCallData = abi.encodeCall(
+            _cfa.updateFlowOperatorPermissions,
+            (
+                token,
+                flowOperator,
+                permissions,
+                flowrateAllowance,
+                new bytes(0) // placeholder
+            )
+        );
 
         return _forwardBatchCall(address(_cfa), cfaCallData, new bytes(0));
     }

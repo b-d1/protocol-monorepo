@@ -8,7 +8,7 @@ import { ISuperfluid } from "../interfaces/superfluid/ISuperfluid.sol";
 import { ISuperfluidToken } from "../interfaces/superfluid/ISuperfluidToken.sol";
 import { ISuperToken } from "../interfaces/superfluid/ISuperToken.sol";
 import { ISuperfluidPool } from "../interfaces/superfluid/ISuperfluidPool.sol";
-import { GeneralDistributionAgreementV1 } from "../agreements/GeneralDistributionAgreementV1.sol";
+import { GeneralDistributionAgreementV1 } from "../agreements/gda/GeneralDistributionAgreementV1.sol";
 import { BeaconProxiable } from "../upgradability/BeaconProxiable.sol";
 import { IPoolMemberNFT } from "../interfaces/superfluid/IPoolMemberNFT.sol";
 import { SafeGasLibrary } from "../libs/SafeGasLibrary.sol";

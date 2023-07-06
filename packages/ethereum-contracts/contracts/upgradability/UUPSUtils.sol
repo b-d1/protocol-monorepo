@@ -5,7 +5,6 @@ pragma solidity 0.8.19;
  * @title UUPS (Universal Upgradeable Proxy Standard) Shared Library
  */
 library UUPSUtils {
-
     /**
      * @dev Implementation slot constant.
      * Using https://eips.ethereum.org/EIPS/eip-1967 standard
@@ -16,7 +15,8 @@ library UUPSUtils {
 
     /// @dev Get implementation address.
     function implementation() internal view returns (address impl) {
-        assembly { // solium-disable-line
+        assembly {
+            // solium-disable-line
             impl := sload(_IMPLEMENTATION_SLOT)
         }
     }
@@ -25,11 +25,7 @@ library UUPSUtils {
     function setImplementation(address codeAddress) internal {
         assembly {
             // solium-disable-line
-            sstore(
-                _IMPLEMENTATION_SLOT,
-                codeAddress
-            )
+            sstore(_IMPLEMENTATION_SLOT, codeAddress)
         }
     }
-
 }

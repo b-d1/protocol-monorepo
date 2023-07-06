@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: AGPLv3
 pragma solidity 0.8.19;
 
-import {
-    ISuperfluid,
-    ISuperToken
-} from "../interfaces/superfluid/ISuperfluid.sol";
+import { ISuperfluid, ISuperToken } from "../interfaces/superfluid/ISuperfluid.sol";
 
 import { ISuperApp, ISuperAgreement } from "../interfaces/superfluid/ISuperfluid.sol";
 import { ContextDefinitions, SuperAppDefinitions } from "../interfaces/superfluid/ISuperfluid.sol";
@@ -15,120 +12,91 @@ import { IInstantDistributionAgreementV1 } from "../interfaces/agreements/IInsta
 import { SuperTokenV1Library } from "../apps/SuperTokenV1Library.sol";
 
 contract SuperTokenLibraryCFAMock {
-
     using SuperTokenV1Library for ISuperToken;
 
-     /**************************************************************************
+    /**
+     *
      * View Functions
-     *************************************************************************/
+     *
+     */
 
-    function getFlowRateTest(
-        ISuperToken token,
-        address sender,
-        address receiver
-    ) public view returns (int96 rate) {
+    function getFlowRateTest(ISuperToken token, address sender, address receiver) public view returns (int96 rate) {
         return token.getFlowRate(sender, receiver);
     }
 
-    function getFlowInfoTest(
-        ISuperToken token,
-        address sender,
-        address receiver
-    ) public view returns (uint256 lastUpdated, int96 flowRate, uint256 deposit, uint256 owedDeposit) {
+    function getFlowInfoTest(ISuperToken token, address sender, address receiver)
+        public
+        view
+        returns (uint256 lastUpdated, int96 flowRate, uint256 deposit, uint256 owedDeposit)
+    {
         return token.getFlowInfo(sender, receiver);
     }
 
-    function getNetFlowRateTest(
-        ISuperToken token,
-        address account
-    ) public view returns (int96 netFlowRate) {
+    function getNetFlowRateTest(ISuperToken token, address account) public view returns (int96 netFlowRate) {
         return token.getNetFlowRate(account);
     }
 
-    function getNetFlowInfoTest(
-        ISuperToken token,
-        address account
-    ) public view returns  (uint256 lastUpdated, int96 flowRate, uint256 deposit, uint256 owedDeposit) {
+    function getNetFlowInfoTest(ISuperToken token, address account)
+        public
+        view
+        returns (uint256 lastUpdated, int96 flowRate, uint256 deposit, uint256 owedDeposit)
+    {
         return token.getNetFlowInfo(account);
     }
 
-    function getBufferAmountByFlowRateTest(
-        ISuperToken token,
-        int96 flowRate
-    ) public view returns (uint256 bufferAmount) {
+    function getBufferAmountByFlowRateTest(ISuperToken token, int96 flowRate)
+        public
+        view
+        returns (uint256 bufferAmount)
+    {
         return token.getBufferAmountByFlowRate(flowRate);
     }
 
-    function getFlowPermissionsTest(
-        ISuperToken token,
-        address sender,
-        address flowOperator
-    ) public view returns (bool allowCreate, bool allowUpdate, bool allowDelete, int96 flowRateAllowance) {
+    function getFlowPermissionsTest(ISuperToken token, address sender, address flowOperator)
+        public
+        view
+        returns (bool allowCreate, bool allowUpdate, bool allowDelete, int96 flowRateAllowance)
+    {
         return token.getFlowPermissions(sender, flowOperator);
     }
 
-
-      /**************************************************************************
+    /**
+     *
      * CFA Operations
-     *************************************************************************/
+     *
+     */
 
-    function createFlowTest(
-        ISuperToken token,
-        address receiver,
-        int96 flowRate
-    ) public {
+    function createFlowTest(ISuperToken token, address receiver, int96 flowRate) public {
         token.createFlow(receiver, flowRate);
     }
 
-    function createFlowWithUserDataTest(
-        ISuperToken token,
-        address receiver,
-        int96 flowRate,
-        bytes memory userData
-    ) public {
+    function createFlowWithUserDataTest(ISuperToken token, address receiver, int96 flowRate, bytes memory userData)
+        public
+    {
         token.createFlow(receiver, flowRate, userData);
     }
 
-    function deleteFlowTest(
-        ISuperToken token,
-        address sender,
-        address receiver
-    ) public {
+    function deleteFlowTest(ISuperToken token, address sender, address receiver) public {
         token.deleteFlow(sender, receiver);
     }
 
-    function deleteFlowWithUserDataTest(
-        ISuperToken token,
-        address sender,
-        address receiver,
-        bytes memory userData
-    ) public {
+    function deleteFlowWithUserDataTest(ISuperToken token, address sender, address receiver, bytes memory userData)
+        public
+    {
         token.deleteFlow(sender, receiver, userData);
     }
 
-    function updateFlowWithUserDataTest(
-        ISuperToken token,
-        address receiver,
-        int96 flowRate,
-        bytes memory userData
-    ) public {
+    function updateFlowWithUserDataTest(ISuperToken token, address receiver, int96 flowRate, bytes memory userData)
+        public
+    {
         token.updateFlow(receiver, flowRate, userData);
     }
 
-    function updateFlowTest(
-        ISuperToken token,
-        address receiver,
-        int96 flowRate
-    ) public {
+    function updateFlowTest(ISuperToken token, address receiver, int96 flowRate) public {
         token.updateFlow(receiver, flowRate);
     }
 
-    function createFlowFromTest(
-        ISuperToken token,
-        address sender,
-        address receiver,
-        int96 flowRate
-    ) public {
+    function createFlowFromTest(ISuperToken token, address sender, address receiver, int96 flowRate) public {
         token.createFlowFrom(sender, receiver, flowRate);
     }
 
@@ -142,29 +110,17 @@ contract SuperTokenLibraryCFAMock {
         token.createFlowFrom(sender, receiver, flowRate, userData);
     }
 
-    function deleteFlowFromTest(
-        ISuperToken token,
-        address sender,
-        address receiver
-    ) public {
+    function deleteFlowFromTest(ISuperToken token, address sender, address receiver) public {
         token.deleteFlowFrom(sender, receiver);
     }
 
-    function deleteFlowFromWithUserDataTest(
-        ISuperToken token,
-        address sender,
-        address receiver,
-        bytes memory userData
-    ) public {
+    function deleteFlowFromWithUserDataTest(ISuperToken token, address sender, address receiver, bytes memory userData)
+        public
+    {
         token.deleteFlowFrom(sender, receiver, userData);
     }
 
-    function updateFlowFromTest(
-        ISuperToken token,
-        address sender,
-        address receiver,
-        int96 flowRate
-    ) public {
+    function updateFlowFromTest(ISuperToken token, address sender, address receiver, int96 flowRate) public {
         token.updateFlowFrom(sender, receiver, flowRate);
     }
 
@@ -189,18 +145,11 @@ contract SuperTokenLibraryCFAMock {
         token.setFlowPermissions(flowOperator, allowCreate, allowUpdate, allowDelete, flowRateAllowance);
     }
 
-
-    function setMaxFlowPermissionsTest(
-        address flowOperator,
-        ISuperToken token
-    ) public {
+    function setMaxFlowPermissionsTest(address flowOperator, ISuperToken token) public {
         token.setMaxFlowPermissions(flowOperator);
     }
 
-    function revokeFlowPermissionsTest(
-        address flowOperator,
-        ISuperToken token
-    ) public {
+    function revokeFlowPermissionsTest(address flowOperator, ISuperToken token) public {
         token.revokeFlowPermissions(flowOperator);
     }
 
@@ -236,103 +185,70 @@ contract SuperTokenLibraryCFAMock {
 }
 
 contract SuperTokenLibraryIDAMock {
-
     using SuperTokenV1Library for ISuperToken;
 
-    /**************************************************************************
+    /**
+     *
      * View Functions
-     *************************************************************************/
+     *
+     */
 
     function getIndexTest(ISuperToken token, address publisher, uint32 indexId)
-        external view
-        returns (
-            bool exist,
-            uint128 indexValue,
-            uint128 totalUnitsApproved,
-            uint128 totalUnitsPending
-        )
+        external
+        view
+        returns (bool exist, uint128 indexValue, uint128 totalUnitsApproved, uint128 totalUnitsPending)
     {
         return token.getIndex(publisher, indexId);
     }
 
-    function calculateDistributionTest(
-        ISuperToken token,
-        address publisher,
-        uint32 indexId,
-        uint256 amount
-    )
-        external view
-        returns (
-            uint256 actualAmount,
-            uint128 newIndexValue
-        )
+    function calculateDistributionTest(ISuperToken token, address publisher, uint32 indexId, uint256 amount)
+        external
+        view
+        returns (uint256 actualAmount, uint128 newIndexValue)
     {
         return token.calculateDistribution(publisher, indexId, amount);
     }
 
     function listSubscriptionsTest(ISuperToken token, address subscriber)
-        external view
-        returns (
-            address[] memory publishers,
-            uint32[] memory indexIds,
-            uint128[] memory unitsList
-        )
+        external
+        view
+        returns (address[] memory publishers, uint32[] memory indexIds, uint128[] memory unitsList)
     {
         return token.listSubscriptions(subscriber);
     }
 
-    function getSubscriptionTest(
-        ISuperToken token,
-        address publisher,
-        uint32 indexId,
-        address subscriber
-    )
-        external view
-        returns (
-            bool exist,
-            bool approved,
-            uint128 units,
-            uint256 pendingDistribution
-        )
+    function getSubscriptionTest(ISuperToken token, address publisher, uint32 indexId, address subscriber)
+        external
+        view
+        returns (bool exist, bool approved, uint128 units, uint256 pendingDistribution)
     {
         return token.getSubscription(publisher, indexId, subscriber);
     }
 
     /// @dev agreementId == keccak256(abi.encodePacked("subscription", subscriber, indexId));
     function getSubscriptionByIDTest(ISuperToken token, bytes32 agreementId)
-        external view
-        returns (
-            address publisher,
-            uint32 indexId,
-            bool approved,
-            uint128 units,
-            uint256 pendingDistribution
-        )
+        external
+        view
+        returns (address publisher, uint32 indexId, bool approved, uint128 units, uint256 pendingDistribution)
     {
         return token.getSubscriptionByID(agreementId);
     }
 
-    /**************************************************************************
+    /**
+     *
      * Index Operations
-     *************************************************************************/
+     *
+     */
 
     function createIndexTest(ISuperToken token, uint32 indexId) external {
         token.createIndex(indexId);
     }
 
-    function createIndexWithUserDataTest(
-        ISuperToken token,
-        uint32 indexId,
-        bytes memory userData
-    ) external {
+    function createIndexWithUserDataTest(ISuperToken token, uint32 indexId, bytes memory userData) external {
         token.createIndex(indexId, userData);
     }
 
-    function updateIndexValueTest(
-        ISuperToken token,
-        uint32 indexId,
-        uint128 indexValue
-    ) external {
+    function updateIndexValueTest(ISuperToken token, uint32 indexId, uint128 indexValue) external {
         token.updateIndexValue(indexId, indexValue);
     }
 
@@ -349,24 +265,19 @@ contract SuperTokenLibraryIDAMock {
         token.distribute(indexId, amount);
     }
 
-    function distributeWithUserDataTest(
-        ISuperToken token,
-        uint32 indexId,
-        uint256 amount,
-        bytes memory userData
-    ) external {
+    function distributeWithUserDataTest(ISuperToken token, uint32 indexId, uint256 amount, bytes memory userData)
+        external
+    {
         token.distribute(indexId, amount, userData);
     }
 
-    /**************************************************************************
+    /**
+     *
      * Subscription Operations
-     *************************************************************************/
+     *
+     */
 
-    function approveSubscriptionTest(
-        ISuperToken token,
-        address publisher,
-        uint32 indexId
-    ) external {
+    function approveSubscriptionTest(ISuperToken token, address publisher, uint32 indexId) external {
         token.approveSubscription(publisher, indexId);
     }
 
@@ -379,11 +290,7 @@ contract SuperTokenLibraryIDAMock {
         token.approveSubscription(publisher, indexId, userData);
     }
 
-    function revokeSubscriptionTest(
-        ISuperToken token,
-        address publisher,
-        uint32 indexId
-    ) external {
+    function revokeSubscriptionTest(ISuperToken token, address publisher, uint32 indexId) external {
         token.revokeSubscription(publisher, indexId);
     }
 
@@ -396,12 +303,9 @@ contract SuperTokenLibraryIDAMock {
         token.revokeSubscription(publisher, indexId, userData);
     }
 
-    function updateSubscriptionUnitsTest(
-        ISuperToken token,
-        uint32 indexId,
-        address subscriber,
-        uint128 units
-    ) external {
+    function updateSubscriptionUnitsTest(ISuperToken token, uint32 indexId, address subscriber, uint128 units)
+        external
+    {
         token.updateSubscriptionUnits(indexId, subscriber, units);
     }
 
@@ -415,12 +319,9 @@ contract SuperTokenLibraryIDAMock {
         token.updateSubscriptionUnits(indexId, subscriber, units, userData);
     }
 
-    function deleteSubscriptionTest(
-        ISuperToken token,
-        address publisher,
-        uint32 indexId,
-        address subscriber
-    ) external {
+    function deleteSubscriptionTest(ISuperToken token, address publisher, uint32 indexId, address subscriber)
+        external
+    {
         token.deleteSubscription(publisher, indexId, subscriber);
     }
 
@@ -434,12 +335,7 @@ contract SuperTokenLibraryIDAMock {
         token.deleteSubscription(publisher, indexId, subscriber, userData);
     }
 
-    function claimTest(
-        ISuperToken token,
-        address publisher,
-        uint32 indexId,
-        address subscriber
-    ) external {
+    function claimTest(ISuperToken token, address publisher, uint32 indexId, address subscriber) external {
         token.claim(publisher, indexId, subscriber);
     }
 
@@ -474,6 +370,7 @@ contract SuperTokenLibraryGDAMock {
     ) external view returns (int96 actualFlowRate, int96 totalDistributionFlowRate) {
         return token.estimateFlowDistributionActualFlowRate(from, to, requestedFlowRate);
     }
+
     function estimateDistributionActualAmountTest(
         ISuperToken token,
         address from,
@@ -483,11 +380,7 @@ contract SuperTokenLibraryGDAMock {
         return token.estimateDistributionActualAmount(from, to, requestedAmount);
     }
 
-    function isMemberConnectedTest(ISuperToken token, address pool, address member)
-        external
-        view
-        returns (bool)
-    {
+    function isMemberConnectedTest(ISuperToken token, address pool, address member) external view returns (bool) {
         return token.isMemberConnected(pool, member);
     }
 
@@ -521,7 +414,6 @@ contract SuperTokenLibraryGDAMock {
 }
 
 contract SuperTokenLibraryCFASuperAppMock is SuperAppBase {
-
     using SuperTokenV1Library for ISuperToken;
 
     // default values for smoke tests
@@ -543,24 +435,16 @@ contract SuperTokenLibraryCFASuperAppMock is SuperAppBase {
         REVOKE_FLOW_OPERATOR_WITH_FULL_CONTROL
     }
 
-    constructor(
-        ISuperfluid _host,
-        address defaultSender,
-        address defaultReceiver,
-        address defaultFlowOperator
-    ) {
+    constructor(ISuperfluid _host, address defaultSender, address defaultReceiver, address defaultFlowOperator) {
         host = _host;
         sender = defaultSender;
         receiver = defaultReceiver;
         flowOperator = defaultFlowOperator;
 
-        uint256 configWord = SuperAppDefinitions.APP_LEVEL_FINAL |
-            SuperAppDefinitions.BEFORE_AGREEMENT_CREATED_NOOP |
-            // SuperAppDefinitions.AFTER_AGREEMENT_CREATED_NOOP |
-            SuperAppDefinitions.BEFORE_AGREEMENT_UPDATED_NOOP |
-            SuperAppDefinitions.AFTER_AGREEMENT_UPDATED_NOOP |
-            SuperAppDefinitions.BEFORE_AGREEMENT_TERMINATED_NOOP |
-            SuperAppDefinitions.AFTER_AGREEMENT_TERMINATED_NOOP;
+        uint256 configWord = SuperAppDefinitions.APP_LEVEL_FINAL | SuperAppDefinitions.BEFORE_AGREEMENT_CREATED_NOOP
+        // SuperAppDefinitions.AFTER_AGREEMENT_CREATED_NOOP |
+        | SuperAppDefinitions.BEFORE_AGREEMENT_UPDATED_NOOP | SuperAppDefinitions.AFTER_AGREEMENT_UPDATED_NOOP
+            | SuperAppDefinitions.BEFORE_AGREEMENT_TERMINATED_NOOP | SuperAppDefinitions.AFTER_AGREEMENT_TERMINATED_NOOP;
 
         host.registerAppWithKey(configWord, "");
     }
@@ -577,32 +461,27 @@ contract SuperTokenLibraryCFASuperAppMock is SuperAppBase {
     function processTxAndReturnCtx(ISuperToken token, bytes memory ctx) internal returns (bytes memory updatedCtx) {
         uint8 functionIndex = abi.decode(host.decodeCtx(ctx).userData, (uint8));
 
-        if (functionIndex == uint8(FunctionIndex.CREATE_FLOW))
+        if (functionIndex == uint8(FunctionIndex.CREATE_FLOW)) {
             return token.createFlowWithCtx(receiver, 1000000000000, ctx);
-        else if (functionIndex == uint8(FunctionIndex.UPDATE_FLOW))
+        } else if (functionIndex == uint8(FunctionIndex.UPDATE_FLOW)) {
             return token.updateFlowWithCtx(receiver, 2000000000000, ctx);
-        else if (functionIndex == uint8(FunctionIndex.DELETE_FLOW))
+        } else if (functionIndex == uint8(FunctionIndex.DELETE_FLOW)) {
             return token.deleteFlowWithCtx(address(this), receiver, ctx);
-        else if (functionIndex == uint8(FunctionIndex.CREATE_FLOW_BY_OPERATOR))
+        } else if (functionIndex == uint8(FunctionIndex.CREATE_FLOW_BY_OPERATOR)) {
             return token.createFlowFromWithCtx(sender, receiver, 1000000000000, ctx);
-        else if (functionIndex == uint8(FunctionIndex.UPDATE_FLOW_BY_OPERATOR))
+        } else if (functionIndex == uint8(FunctionIndex.UPDATE_FLOW_BY_OPERATOR)) {
             return token.updateFlowFromWithCtx(sender, receiver, 2000000000000, ctx);
-        else if (functionIndex == uint8(FunctionIndex.DELETE_FLOW_BY_OPERATOR))
+        } else if (functionIndex == uint8(FunctionIndex.DELETE_FLOW_BY_OPERATOR)) {
             return token.deleteFlowFromWithCtx(sender, receiver, ctx);
-        else if (functionIndex == uint8(FunctionIndex.UPDATE_FLOW_OPERATOR_PERMISSIONS))
-            return token.setFlowPermissionsWithCtx(
-                flowOperator,
-                true,
-                true,
-                true,
-                1000000000000,
-                ctx
-            );
-        else if (functionIndex == uint8(FunctionIndex.AUTHORIZE_FLOW_OPERATOR_WITH_FULL_CONTROL))
+        } else if (functionIndex == uint8(FunctionIndex.UPDATE_FLOW_OPERATOR_PERMISSIONS)) {
+            return token.setFlowPermissionsWithCtx(flowOperator, true, true, true, 1000000000000, ctx);
+        } else if (functionIndex == uint8(FunctionIndex.AUTHORIZE_FLOW_OPERATOR_WITH_FULL_CONTROL)) {
             return token.setMaxFlowPermissionsWithCtx(flowOperator, ctx);
-        else if (functionIndex == uint8(FunctionIndex.REVOKE_FLOW_OPERATOR_WITH_FULL_CONTROL))
+        } else if (functionIndex == uint8(FunctionIndex.REVOKE_FLOW_OPERATOR_WITH_FULL_CONTROL)) {
             return token.revokeFlowPermissionsWithCtx(flowOperator, ctx);
-        else revert("invalid function index");
+        } else {
+            revert("invalid function index");
+        }
     }
 
     function afterAgreementCreated(
@@ -619,7 +498,6 @@ contract SuperTokenLibraryCFASuperAppMock is SuperAppBase {
 
 // IDA LIBRARY SUPER APP CALLBACK MOCK
 contract SuperTokenLibraryIDASuperAppMock is SuperTokenLibraryIDAMock, SuperAppBase {
-
     using SuperTokenV1Library for ISuperToken;
 
     bytes internal constant _MOCK_USER_DATA = abi.encode("oh hello");
@@ -627,13 +505,11 @@ contract SuperTokenLibraryIDASuperAppMock is SuperTokenLibraryIDAMock, SuperAppB
 
     constructor(ISuperfluid _host) SuperTokenLibraryIDAMock() {
         host = _host;
-        uint256 configWord = SuperAppDefinitions.APP_LEVEL_FINAL |
-            SuperAppDefinitions.BEFORE_AGREEMENT_CREATED_NOOP |
-            // SuperAppDefinitions.AFTER_AGREEMENT_CREATED_NOOP |
-            SuperAppDefinitions.BEFORE_AGREEMENT_UPDATED_NOOP |
-            // SuperAppDefinitions.AFTER_AGREEMENT_UPDATED_NOOP |
-            SuperAppDefinitions.BEFORE_AGREEMENT_TERMINATED_NOOP |
-            SuperAppDefinitions.AFTER_AGREEMENT_TERMINATED_NOOP;
+        uint256 configWord = SuperAppDefinitions.APP_LEVEL_FINAL | SuperAppDefinitions.BEFORE_AGREEMENT_CREATED_NOOP
+        // SuperAppDefinitions.AFTER_AGREEMENT_CREATED_NOOP |
+        | SuperAppDefinitions.BEFORE_AGREEMENT_UPDATED_NOOP
+        // SuperAppDefinitions.AFTER_AGREEMENT_UPDATED_NOOP |
+        | SuperAppDefinitions.BEFORE_AGREEMENT_TERMINATED_NOOP | SuperAppDefinitions.AFTER_AGREEMENT_TERMINATED_NOOP;
 
         host.registerAppWithKey(configWord, "");
     }
@@ -683,20 +559,11 @@ contract SuperTokenLibraryIDASuperAppMock is SuperTokenLibraryIDAMock, SuperAppB
     /// @param token super token
     /// @param ctx Context string
     /// @return New Context
-    function _callbackTest(
-        ISuperToken token,
-        bytes memory ctx
-    ) internal returns (bytes memory) {
-
+    function _callbackTest(ISuperToken token, bytes memory ctx) internal returns (bytes memory) {
         // extract userData, then decode everything else
         bytes memory userData = host.decodeCtx(ctx).userData;
-        (
-            uint8 functionIndex,
-            uint32 indexId,
-            address publisher,
-            address subscriber,
-            uint128 units
-        ) = abi.decode(userData, (uint8, uint32, address, address, uint128));
+        (uint8 functionIndex, uint32 indexId, address publisher, address subscriber, uint128 units) =
+            abi.decode(userData, (uint8, uint32, address, address, uint128));
 
         if (functionIndex == uint8(FunctionIndex.CREATE_INDEX)) {
             return token.createIndexWithCtx(indexId, ctx);
@@ -713,46 +580,23 @@ contract SuperTokenLibraryIDASuperAppMock is SuperTokenLibraryIDAMock, SuperAppB
         } else if (functionIndex == uint8(FunctionIndex.APROVE_SUBSCRIPTION)) {
             return token.approveSubscriptionWithCtx(publisher, indexId, ctx);
         } else if (functionIndex == uint8(FunctionIndex.APROVE_SUBSCRIPTION_USER_DATA)) {
-            return token.approveSubscriptionWithCtx(
-                publisher,
-                indexId,
-                ctx
-            );
+            return token.approveSubscriptionWithCtx(publisher, indexId, ctx);
         } else if (functionIndex == uint8(FunctionIndex.REVOKE_SUBSCRIPTION)) {
             return token.revokeSubscriptionWithCtx(publisher, indexId, ctx);
         } else if (functionIndex == uint8(FunctionIndex.REVOKE_SUBSCRIPTION_USER_DATA)) {
-            return token.revokeSubscriptionWithCtx(
-                publisher,
-                indexId,
-                ctx
-            );
+            return token.revokeSubscriptionWithCtx(publisher, indexId, ctx);
         } else if (functionIndex == uint8(FunctionIndex.UPDATE_SUBSCRIPTION)) {
             return token.updateSubscriptionUnitsWithCtx(indexId, subscriber, units, ctx);
         } else if (functionIndex == uint8(FunctionIndex.UPDATE_SUBSCRIPTION_USER_DATA)) {
-            return token.updateSubscriptionUnitsWithCtx(
-                indexId,
-                subscriber,
-                units,
-                ctx
-            );
+            return token.updateSubscriptionUnitsWithCtx(indexId, subscriber, units, ctx);
         } else if (functionIndex == uint8(FunctionIndex.DELETE_SUBSCRIPTION)) {
             return token.deleteSubscriptionWithCtx(publisher, indexId, subscriber, ctx);
         } else if (functionIndex == uint8(FunctionIndex.DELETE_SUBSCRIPTION_USER_DATA)) {
-            return token.deleteSubscriptionWithCtx(
-                publisher,
-                indexId,
-                subscriber,
-                ctx
-            );
+            return token.deleteSubscriptionWithCtx(publisher, indexId, subscriber, ctx);
         } else if (functionIndex == uint8(FunctionIndex.CLAIM)) {
             return token.claimWithCtx(publisher, indexId, subscriber, ctx);
         } else if (functionIndex == uint8(FunctionIndex.CLAIM_USER_DATA)) {
-            return token.claimWithCtx(
-                publisher,
-                indexId,
-                subscriber,
-                ctx
-            );
+            return token.claimWithCtx(publisher, indexId, subscriber, ctx);
         } else {
             revert("invalid function index");
         }

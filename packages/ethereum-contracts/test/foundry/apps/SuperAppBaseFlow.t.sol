@@ -5,11 +5,7 @@ import "forge-std/console.sol";
 import "../FoundrySuperfluidTester.sol";
 import { SuperAppBaseFlow } from "../../../contracts/apps/SuperAppBaseFlow.sol";
 import { SuperAppBaseFlowTester } from "../../../contracts/mocks/SuperAppBaseFlowTester.sol";
-import {
-    ISuperToken,
-    ISuperApp,
-    SuperAppDefinitions
-} from "../../../contracts/interfaces/superfluid/ISuperfluid.sol";
+import { ISuperToken, ISuperApp, SuperAppDefinitions } from "../../../contracts/interfaces/superfluid/ISuperfluid.sol";
 import { IConstantFlowAgreementV1 } from "../../../contracts/interfaces/agreements/IConstantFlowAgreementV1.sol";
 import { SuperTokenV1Library } from "../../../contracts/apps/SuperTokenV1Library.sol";
 
