@@ -7,6 +7,12 @@ import { ISuperfluidToken } from "../interfaces/superfluid/ISuperfluidToken.sol"
 import { GeneralDistributionAgreementV1 } from "../agreements/GeneralDistributionAgreementV1.sol";
 import { ISuperfluidPool, SuperfluidPool } from "../superfluid/SuperfluidPool.sol";
 
+import { 
+    UniversalIndexData, 
+    FlowDistributionData, 
+    PoolMemberData 
+} from "../agreements/static/Structs.sol";
+
 /// @title GeneralDistributionAgreementV1Harness
 /// @author Superfluid
 /// @notice A GDAv1 Mock contract which exposes internal functions for testing purposes

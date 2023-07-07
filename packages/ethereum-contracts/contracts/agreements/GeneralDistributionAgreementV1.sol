@@ -26,7 +26,7 @@ import { SlotsBitmapLibrary } from "../libs/SlotsBitmapLibrary.sol";
 import { SafeGasLibrary } from "../libs/SafeGasLibrary.sol";
 import { AgreementBase } from "./AgreementBase.sol";
 import { AgreementLibrary } from "./AgreementLibrary.sol";
-
+import { UniversalIndexData, FlowDistributionData, PoolMemberData, _StackVars_Liquidation } from "./static/Structs.sol";
 // TODO: add summed CFA + GDA net flow rate onto SuperToken.sol/SuperfluidToken.sol
 
 /**
@@ -93,34 +93,6 @@ contract GeneralDistributionAgreementV1 is AgreementBase, TokenMonad, IGeneralDi
 
     bytes32 private constant SUPERTOKEN_MINIMUM_DEPOSIT_KEY =
         keccak256("org.superfluid-finance.superfluid.superTokenMinimumDeposit");
-
-    struct UniversalIndexData {
-        int96 flowRate;
-        uint32 settledAt;
-        uint256 totalBuffer;
-        bool isPool;
-        int256 settledValue;
-    }
-
-    struct FlowDistributionData {
-        uint32 lastUpdated;
-        int96 flowRate;
-        uint256 buffer; // stored as uint96
-    }
-
-    struct PoolMemberData {
-        address pool;
-        uint32 poolID; // the slot id in the pool's subs bitmap
-    }
-
-    struct _StackVars_Liquidation {
-        ISuperfluidToken token;
-        int256 availableBalance;
-        address sender;
-        bytes32 distributionFlowHash;
-        int256 signedTotalGDADeposit;
-        address liquidator;
-    }
 
     IBeacon public superfluidPoolBeacon;
 
