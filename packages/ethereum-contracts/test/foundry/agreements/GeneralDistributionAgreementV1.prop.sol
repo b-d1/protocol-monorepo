@@ -10,8 +10,10 @@ import "@superfluid-finance/solidity-semantic-money/src/SemanticMoney.sol";
 import {
     GeneralDistributionAgreementV1,
     ISuperfluid
-} from "../../../contracts/agreements/GeneralDistributionAgreementV1.sol";
-
+} from "../../../contracts/agreements/gda/GeneralDistributionAgreementV1.sol";
+import {
+    UniversalIndexData, FlowDistributionData, PoolMemberData
+} from "../../../contracts/agreements/gda/static/Structs.sol";
 /// @title GeneralDistributionAgreementV1 Property Tests
 /// @author Superfluid
 /// @notice This is a contract that runs property tests for the GDAv1
@@ -93,9 +95,9 @@ contract GeneralDistributionAgreementV1Properties is
     ) public {
         vm.assume(flowRate >= 0);
         vm.assume(buffer >= 0);
-        GeneralDistributionAgreementV1.FlowDistributionData
-            memory original = GeneralDistributionAgreementV1
-                .FlowDistributionData({
+        FlowDistributionData
+            memory original = 
+                FlowDistributionData({
                     flowRate: flowRate,
                     lastUpdated: uint32(block.timestamp),
                     buffer: buffer
@@ -103,7 +105,7 @@ contract GeneralDistributionAgreementV1Properties is
         bytes32[] memory encoded = _encodeFlowDistributionData(original);
         (
             ,
-            GeneralDistributionAgreementV1.FlowDistributionData memory decoded
+            FlowDistributionData memory decoded
         ) = _decodeFlowDistributionData(uint256(encoded[0]));
 
         assertEq(original.flowRate, decoded.flowRate, "flowRate not equal");
@@ -116,15 +118,15 @@ contract GeneralDistributionAgreementV1Properties is
         uint32 poolID
     ) public {
         vm.assume(pool != address(0));
-        GeneralDistributionAgreementV1.PoolMemberData
-            memory original = GeneralDistributionAgreementV1.PoolMemberData({
+        PoolMemberData
+            memory original = PoolMemberData({
                 pool: pool,
                 poolID: poolID
             });
         bytes32[] memory encoded = _encodePoolMemberData(original);
         (
             ,
-            GeneralDistributionAgreementV1.PoolMemberData memory decoded
+            PoolMemberData memory decoded
         ) = _decodePoolMemberData(uint256(encoded[0]));
 
         assertEq(original.pool, decoded.pool, "pool not equal");

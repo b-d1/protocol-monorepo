@@ -10,7 +10,10 @@ import { console } from "forge-std/console.sol";
 import {
     GeneralDistributionAgreementV1,
     IGeneralDistributionAgreementV1
-} from "../../../contracts/agreements/GeneralDistributionAgreementV1.sol";
+} from "../../../contracts/agreements/gda/GeneralDistributionAgreementV1.sol";
+import {
+    UniversalIndexData, FlowDistributionData, PoolMemberData
+} from "../../../contracts/agreements/gda/static/Structs.sol";
 import { SuperTokenV1Library } from "../../../contracts/apps/SuperTokenV1Library.sol";
 import { ISuperToken } from "../../../contracts/interfaces/superfluid/ISuperToken.sol";
 import { ISuperfluidToken } from "../../../contracts/interfaces/superfluid/ISuperfluidToken.sol";
@@ -96,7 +99,7 @@ contract GeneralDistributionAgreementV1Test is FoundrySuperfluidTester {
             _settled_value: Value.wrap(settledValue)
         });
         sf.gda.setUIndex(eff, owner, p);
-        (, GeneralDistributionAgreementV1.UniversalIndexData memory setUIndexData) =
+        (, UniversalIndexData memory setUIndexData) =
             sf.gda.getUIndexAndUindexData(eff, owner);
 
         assertEq(settledAt, setUIndexData.settledAt, "settledAt not equal");
@@ -126,7 +129,7 @@ contract GeneralDistributionAgreementV1Test is FoundrySuperfluidTester {
 
         vm.warp(1000);
 
-        (bool exist, GeneralDistributionAgreementV1.FlowDistributionData memory setFlowDistributionData) =
+        (bool exist, FlowDistributionData memory setFlowDistributionData) =
             sf.gda.getFlowDistributionData(superToken, flowHash);
 
         assertEq(true, exist, "flow distribution data does not exist");
@@ -157,12 +160,12 @@ contract GeneralDistributionAgreementV1Test is FoundrySuperfluidTester {
         superToken.updateAgreementData(
             poolMemberId,
             sf.gda.encodePoolMemberData(
-                GeneralDistributionAgreementV1.PoolMemberData({ poolID: poolID, pool: address(_pool) })
+                PoolMemberData({ poolID: poolID, pool: address(_pool) })
             )
         );
         vm.stopPrank();
 
-        (bool exist, GeneralDistributionAgreementV1.PoolMemberData memory setPoolMemberData) =
+        (bool exist, PoolMemberData memory setPoolMemberData) =
             sf.gda.getPoolMemberData(superToken, poolMember, _pool);
 
         assertEq(true, exist, "pool member data does not exist");
@@ -231,7 +234,7 @@ contract GeneralDistributionAgreementV1Test is FoundrySuperfluidTester {
             FlowRate.wrap(int128(newFlowRate))
         );
 
-        (bool exist, GeneralDistributionAgreementV1.FlowDistributionData memory flowDistributionData) =
+        (bool exist, FlowDistributionData memory flowDistributionData) =
             sf.gda.getFlowDistributionData(superToken, flowHash);
         assertEq(exist, true, "flow distribution data does not exist");
         assertEq(flowDistributionData.buffer, expectedBuffer, "buffer not equal");
@@ -257,9 +260,9 @@ contract GeneralDistributionAgreementV1Test is FoundrySuperfluidTester {
         bytes32 flowHash = sf.gda.getFlowDistributionId(from, to);
         uint256 bufferDelta = uint256(int256(newFlowRate)) * liquidationPeriod; // expected buffer == buffer delta
             // because of fresh state
-        (, GeneralDistributionAgreementV1.UniversalIndexData memory fromUindexDataBefore) =
+        (, UniversalIndexData memory fromUindexDataBefore) =
             sf.gda.getUIndexAndUindexData(abi.encode(superToken), from);
-        (, GeneralDistributionAgreementV1.UniversalIndexData memory gdaUindexDataBefore) =
+        (, UniversalIndexData memory gdaUindexDataBefore) =
             sf.gda.getUIndexAndUindexData(abi.encode(superToken), address(sf.gda));
         sf.gda.adjustBuffer(
             abi.encode(superToken),
@@ -270,7 +273,7 @@ contract GeneralDistributionAgreementV1Test is FoundrySuperfluidTester {
             FlowRate.wrap(int128(newFlowRate))
         );
 
-        (, GeneralDistributionAgreementV1.UniversalIndexData memory fromUindexDataAfter) =
+        (, UniversalIndexData memory fromUindexDataAfter) =
             sf.gda.getUIndexAndUindexData(abi.encode(superToken), from);
 
         assertEq(
@@ -284,7 +287,7 @@ contract GeneralDistributionAgreementV1Test is FoundrySuperfluidTester {
             "from settled value not shifted to gda"
         );
 
-        (, GeneralDistributionAgreementV1.UniversalIndexData memory gdaUindexDataAfter) =
+        (, UniversalIndexData memory gdaUindexDataAfter) =
             sf.gda.getUIndexAndUindexData(abi.encode(superToken), address(sf.gda));
         assertEq(
             gdaUindexDataBefore.settledValue + int256(bufferDelta),

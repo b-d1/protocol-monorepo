@@ -4,7 +4,8 @@ pragma solidity 0.8.19;
 import "@superfluid-finance/solidity-semantic-money/src/SemanticMoney.sol";
 import { ISuperfluid } from "../interfaces/superfluid/ISuperfluid.sol";
 import { ISuperfluidToken } from "../interfaces/superfluid/ISuperfluidToken.sol";
-import { GeneralDistributionAgreementV1 } from "../agreements/GeneralDistributionAgreementV1.sol";
+import { GeneralDistributionAgreementV1 } from "../agreements/gda/GeneralDistributionAgreementV1.sol";
+import { UniversalIndexData, FlowDistributionData, PoolMemberData } from "../agreements/gda/static/Structs.sol";
 import { ISuperfluidPool, SuperfluidPool } from "../superfluid/SuperfluidPool.sol";
 
 /// @title GeneralDistributionAgreementV1Harness
