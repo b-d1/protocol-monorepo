@@ -10,10 +10,10 @@ import "@superfluid-finance/solidity-semantic-money/src/SemanticMoney.sol";
 import {
     GeneralDistributionAgreementV1,
     ISuperfluid
-} from "../../../contracts/agreements/gda/GeneralDistributionAgreementV1.sol";
+} from "../../../../contracts/agreements/gda/GeneralDistributionAgreementV1.sol";
 import {
     UniversalIndexData, FlowDistributionData, PoolMemberData
-} from "../../../contracts/agreements/gda/static/Structs.sol";
+} from "../../../../contracts/agreements/gda/static/Structs.sol";
 /// @title GeneralDistributionAgreementV1 Property Tests
 /// @author Superfluid
 /// @notice This is a contract that runs property tests for the GDAv1
