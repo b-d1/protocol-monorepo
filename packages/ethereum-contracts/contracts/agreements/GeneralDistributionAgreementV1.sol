@@ -138,10 +138,12 @@ contract GeneralDistributionAgreementV1 is AgreementBase, TokenMonad, IGeneralDi
         UniversalIndexData memory universalIndexData = _getUIndexData(abi.encode(token), account);
         BasicParticle memory uIndexParticle = _getBasicParticleFromUIndex(universalIndexData);
 
+        uint32 timeu32 = uint32(time);
+
         if (_isPool(token, account)) {
-            own = ISuperfluidPool(account).getDisconnectedBalance(uint32(time));
+            own = ISuperfluidPool(account).getDisconnectedBalance(timeu32);
         } else {
-            own = Value.unwrap(uIndexParticle.rtb(Time.wrap(uint32(time))));
+            own = Value.unwrap(uIndexParticle.rtb(Time.wrap(timeu32)));
         }
 
         {
@@ -150,9 +152,10 @@ contract GeneralDistributionAgreementV1 is AgreementBase, TokenMonad, IGeneralDi
                 address pool = address(uint160(uint256(pidList[i])));
                 (bool exist, PoolMemberData memory poolMemberData) =
                     _getPoolMemberData(token, account, ISuperfluidPool(pool));
+                // TODO: Do we need these asserts here? Potentially remove.
                 assert(exist);
                 assert(poolMemberData.pool == pool);
-                fromPools = fromPools + ISuperfluidPool(pool).getClaimable(account, uint32(time));
+                fromPools = fromPools + ISuperfluidPool(pool).getClaimable(account, timeu32);
             }
         }
 
@@ -163,12 +166,12 @@ contract GeneralDistributionAgreementV1 is AgreementBase, TokenMonad, IGeneralDi
         public
         view
         override
-        returns (int256 rtb, uint256 buf, uint256 owedBuffer)
+        returns (int256 realtimeBalance, uint256 buffer, uint256 owedBuffer)
     {
-        (int256 available, int256 fromPools, int256 buffer) = realtimeBalanceVectorAt(token, account, time);
-        rtb = available + fromPools - buffer;
+        (int256 available, int256 fromPools, int256 buf) = realtimeBalanceVectorAt(token, account, time);
+        realtimeBalance = available + fromPools - buf;
 
-        buf = uint256(buffer); // upcasting to uint256 is safe
+        buffer = uint256(buf); // upcasting to uint256 is safe
         owedBuffer = 0;
     }
 
@@ -204,11 +207,11 @@ contract GeneralDistributionAgreementV1 is AgreementBase, TokenMonad, IGeneralDi
         external
         view
         override
-        returns (int96)
+        returns (int96 flowRate)
     {
         bytes32 distributionFlowHash = _getFlowDistributionHash(from, to);
         (, FlowDistributionData memory data) = _getFlowDistributionData(token, distributionFlowHash);
-        return data.flowRate;
+        flowRate = data.flowRate;
     }
 
     /// @inheritdoc IGeneralDistributionAgreementV1
@@ -218,6 +221,7 @@ contract GeneralDistributionAgreementV1 is AgreementBase, TokenMonad, IGeneralDi
         ISuperfluidPool to,
         int96 requestedFlowRate
     ) external view override returns (int96 actualFlowRate, int96 totalDistributionFlowRate) {
+        // TODO: Consider renaming eff to encodedToken?, eff is ambigous
         bytes memory eff = abi.encode(token);
         bytes32 distributionFlowHash = _getFlowDistributionHash(from, to);
 

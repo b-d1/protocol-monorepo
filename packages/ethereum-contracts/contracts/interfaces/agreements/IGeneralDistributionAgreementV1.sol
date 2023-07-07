@@ -66,8 +66,8 @@ abstract contract IGeneralDistributionAgreementV1 is ISuperAgreement {
     /// @dev Gets the GDA net flow rate of `account` for `token`.
     /// @param token The token address
     /// @param account The account address
-    /// @return net flow rate
-    function getNetFlow(ISuperfluidToken token, address account) external view virtual returns (int96);
+    /// @return netFlowRate
+    function getNetFlow(ISuperfluidToken token, address account) external view virtual returns (int96 netFlowRate);
 
     /// @notice Gets the GDA flow rate of `from` to `to` for `token`.
     /// @dev This is primarily used to get the flow distribution flow rate from a distributor to a pool or the
@@ -75,12 +75,12 @@ abstract contract IGeneralDistributionAgreementV1 is ISuperAgreement {
     /// @param token The token address
     /// @param from The sender address
     /// @param to The receiver address (the pool)
-    /// @return flow rate
+    /// @return flowRate
     function getFlowRate(ISuperfluidToken token, address from, ISuperfluidPool to)
         external
         view
         virtual
-        returns (int96);
+        returns (int96 flowRate);
 
     /// @notice Executes an optimistic estimation of what the actual flow distribution flow rate may be.
     /// The actual flow distribution flow rate is the flow rate that will be sent from `from`.
@@ -129,6 +129,7 @@ abstract contract IGeneralDistributionAgreementV1 is ISuperAgreement {
     /// @param token The token address
     function createPool(ISuperfluidToken token, address admin) external virtual returns (ISuperfluidPool pool);
 
+    // TODO: Consider adding more info about the caller of connectPool
     /// @notice Connects `msg.sender` to `pool`.
     /// @dev This is used to connect a pool to the GDA.
     /// @param pool The pool address
@@ -136,6 +137,7 @@ abstract contract IGeneralDistributionAgreementV1 is ISuperAgreement {
     /// @return newCtx the new context bytes
     function connectPool(ISuperfluidPool pool, bytes calldata ctx) external virtual returns (bytes memory newCtx);
 
+    // TODO: Consider adding more info about the caller of connectPool
     /// @notice Disconnects `msg.sender` from `pool`.
     /// @dev This is used to disconnect a pool from the GDA.
     /// @param pool The pool address
@@ -149,6 +151,7 @@ abstract contract IGeneralDistributionAgreementV1 is ISuperAgreement {
     /// @return true if `account` is a pool
     function isPool(ISuperfluidToken token, address account) external view virtual returns (bool);
 
+    /// TODO: Consider using more explicit (different) function names over parammeter overloading
     /// Check if an address is connected to the pool
     function isMemberConnected(ISuperfluidPool pool, address memberAddr) external view virtual returns (bool);
 
@@ -160,7 +163,11 @@ abstract contract IGeneralDistributionAgreementV1 is ISuperAgreement {
         returns (bool);
 
     /// Get pool adjustment flow information: (recipient, flowHash, flowRate)
-    function getPoolAdjustmentFlowInfo(ISuperfluidPool pool) external view virtual returns (address, bytes32, int96);
+    function getPoolAdjustmentFlowInfo(ISuperfluidPool pool)
+        external
+        view
+        virtual
+        returns (address recipient, bytes32 flowhash, int96 flowRate);
 
     ////////////////////////////////////////////////////////////////////////////////
     // Agreement Operations
