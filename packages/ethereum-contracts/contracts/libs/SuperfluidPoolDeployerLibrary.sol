@@ -2,7 +2,7 @@
 pragma solidity 0.8.19;
 
 import { BeaconProxy } from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
-import { GeneralDistributionAgreementV1 } from "../agreements/GeneralDistributionAgreementV1.sol";
+import { GeneralDistributionAgreementV1 } from "../agreements/gda/GeneralDistributionAgreementV1.sol";
 import { ISuperfluidToken } from "../interfaces/superfluid/ISuperfluidToken.sol";
 import { SuperfluidPool } from "../superfluid/SuperfluidPool.sol";
 

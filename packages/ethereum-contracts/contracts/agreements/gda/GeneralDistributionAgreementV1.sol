@@ -7,25 +7,26 @@ import { IBeacon } from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.
 import {
     ISuperfluid,
     ISuperfluidGovernance,
-    ISuperApp,
-    SuperAppDefinitions,
-    ContextDefinitions,
     SuperfluidGovernanceConfigs
-} from "../interfaces/superfluid/ISuperfluid.sol";
+} from "../../interfaces/superfluid/ISuperfluid.sol";
 import "@superfluid-finance/solidity-semantic-money/src/SemanticMoney.sol";
 import { TokenMonad } from "@superfluid-finance/solidity-semantic-money/src/TokenMonad.sol";
-import { SuperfluidPool } from "../superfluid/SuperfluidPool.sol";
-import { SuperfluidPoolDeployerLibrary } from "../libs/SuperfluidPoolDeployerLibrary.sol";
-import { IGeneralDistributionAgreementV1 } from "../interfaces/agreements/IGeneralDistributionAgreementV1.sol";
-import { ISuperfluidToken } from "../interfaces/superfluid/ISuperfluidToken.sol";
-import { IConstantOutflowNFT } from "../interfaces/superfluid/IConstantOutflowNFT.sol";
-import { ISuperToken } from "../interfaces/superfluid/ISuperToken.sol";
-import { IPoolAdminNFT } from "../interfaces/superfluid/IPoolAdminNFT.sol";
-import { ISuperfluidPool } from "../interfaces/superfluid/ISuperfluidPool.sol";
-import { SlotsBitmapLibrary } from "../libs/SlotsBitmapLibrary.sol";
-import { SafeGasLibrary } from "../libs/SafeGasLibrary.sol";
-import { AgreementBase } from "./AgreementBase.sol";
-import { AgreementLibrary } from "./AgreementLibrary.sol";
+import { SuperfluidPool } from "../../superfluid/SuperfluidPool.sol";
+import { SuperfluidPoolDeployerLibrary } from "../../libs/SuperfluidPoolDeployerLibrary.sol";
+import { IGeneralDistributionAgreementV1 } from "../../interfaces/agreements/IGeneralDistributionAgreementV1.sol";
+import { ISuperfluidToken } from "../../interfaces/superfluid/ISuperfluidToken.sol";
+import { IConstantOutflowNFT } from "../../interfaces/superfluid/IConstantOutflowNFT.sol";
+import { ISuperToken } from "../../interfaces/superfluid/ISuperToken.sol";
+import { IPoolAdminNFT } from "../../interfaces/superfluid/IPoolAdminNFT.sol";
+import { ISuperfluidPool } from "../../interfaces/superfluid/ISuperfluidPool.sol";
+import { SlotsBitmapLibrary } from "../../libs/SlotsBitmapLibrary.sol";
+import { SafeGasLibrary } from "../../libs/SafeGasLibrary.sol";
+import { AgreementBase } from "../AgreementBase.sol";
+import { AgreementLibrary } from "../AgreementLibrary.sol";
+import {
+    UniversalIndexData, FlowDistributionData, PoolMemberData, _StackVars_Liquidation
+} from "./static/Structs.sol";
+import { GeneralDistributionAgreementUtils } from "./GeneralDistributionAgreementUtils.sol";
 
 // TODO: add summed CFA + GDA net flow rate onto SuperToken.sol/SuperfluidToken.sol
 
@@ -72,7 +73,12 @@ import { AgreementLibrary } from "./AgreementLibrary.sol";
  * keccak256(abi.encode(block.chainid, "poolMember", member, pool))
  * PoolMemberId stores PoolMemberData for a member at a pool.
  */
-contract GeneralDistributionAgreementV1 is AgreementBase, TokenMonad, IGeneralDistributionAgreementV1 {
+contract GeneralDistributionAgreementV1 is
+    AgreementBase,
+    TokenMonad,
+    IGeneralDistributionAgreementV1,
+    GeneralDistributionAgreementUtils
+{
     using SafeCast for uint256;
     using SafeCast for int256;
     using SemanticMoney for BasicParticle;
@@ -81,95 +87,12 @@ contract GeneralDistributionAgreementV1 is AgreementBase, TokenMonad, IGeneralDi
 
     address public constant SUPERFLUID_POOL_DEPLOYER_ADDRESS = address(SuperfluidPoolDeployerLibrary);
 
-    /// @dev Universal Index state slot id for storing universal index data
-    uint256 private constant _UNIVERSAL_INDEX_STATE_SLOT_ID = 0;
-    /// @dev Pool member state slot id for storing subs bitmap
-    uint256 private constant _POOL_SUBS_BITMAP_STATE_SLOT_ID = 1;
-    /// @dev Pool member state slot id starting point for pool connections
-    uint256 private constant _POOL_CONNECTIONS_DATA_STATE_SLOT_ID_START = 1 << 128;
-    /// @dev CFAv1 PPP Config Key
-    bytes32 private constant CFAV1_PPP_CONFIG_KEY =
-        keccak256("org.superfluid-finance.agreements.ConstantFlowAgreement.v1.PPPConfiguration");
-
-    bytes32 private constant SUPERTOKEN_MINIMUM_DEPOSIT_KEY =
-        keccak256("org.superfluid-finance.superfluid.superTokenMinimumDeposit");
-
-    struct UniversalIndexData {
-        int96 flowRate;
-        uint32 settledAt;
-        uint256 totalBuffer;
-        bool isPool;
-        int256 settledValue;
-    }
-
-    struct FlowDistributionData {
-        uint32 lastUpdated;
-        int96 flowRate;
-        uint256 buffer; // stored as uint96
-    }
-
-    struct PoolMemberData {
-        address pool;
-        uint32 poolID; // the slot id in the pool's subs bitmap
-    }
-
-    struct _StackVars_Liquidation {
-        ISuperfluidToken token;
-        int256 availableBalance;
-        address sender;
-        bytes32 distributionFlowHash;
-        int256 signedTotalGDADeposit;
-        address liquidator;
-    }
-
     IBeacon public superfluidPoolBeacon;
 
     constructor(ISuperfluid host) AgreementBase(address(host)) { }
 
     function initialize(IBeacon superfluidPoolBeacon_) external initializer {
         superfluidPoolBeacon = superfluidPoolBeacon_;
-    }
-
-    function realtimeBalanceVectorAt(ISuperfluidToken token, address account, uint256 time)
-        public
-        view
-        returns (int256 own, int256 fromPools, int256 buffer)
-    {
-        UniversalIndexData memory universalIndexData = _getUIndexData(abi.encode(token), account);
-        BasicParticle memory uIndexParticle = _getBasicParticleFromUIndex(universalIndexData);
-
-        if (_isPool(token, account)) {
-            own = ISuperfluidPool(account).getDisconnectedBalance(uint32(time));
-        } else {
-            own = Value.unwrap(uIndexParticle.rtb(Time.wrap(uint32(time))));
-        }
-
-        {
-            (uint32[] memory slotIds, bytes32[] memory pidList) = _listPoolConnectionIds(token, account);
-            for (uint256 i = 0; i < slotIds.length; ++i) {
-                address pool = address(uint160(uint256(pidList[i])));
-                (bool exist, PoolMemberData memory poolMemberData) =
-                    _getPoolMemberData(token, account, ISuperfluidPool(pool));
-                assert(exist);
-                assert(poolMemberData.pool == pool);
-                fromPools = fromPools + ISuperfluidPool(pool).getClaimable(account, uint32(time));
-            }
-        }
-
-        buffer = universalIndexData.totalBuffer.toInt256();
-    }
-
-    function realtimeBalanceOf(ISuperfluidToken token, address account, uint256 time)
-        public
-        view
-        override
-        returns (int256 rtb, uint256 buf, uint256 owedBuffer)
-    {
-        (int256 available, int256 fromPools, int256 buffer) = realtimeBalanceVectorAt(token, account, time);
-        rtb = available + fromPools - buffer;
-
-        buf = uint256(buffer); // upcasting to uint256 is safe
-        owedBuffer = 0;
     }
 
     /// @dev ISuperAgreement.realtimeBalanceOf implementation
@@ -180,6 +103,56 @@ contract GeneralDistributionAgreementV1 is AgreementBase, TokenMonad, IGeneralDi
     {
         (availableBalance, buffer, owedBuffer) = realtimeBalanceOf(token, account, block.timestamp);
         timestamp = block.timestamp;
+    }
+
+    function realtimeBalanceOf(ISuperfluidToken token, address account, uint256 time)
+        public
+        view
+        override
+        returns (int256 realtimeBalance, uint256 buffer, uint256 owedBuffer)
+    {
+        (int256 availableBalance, int256 fromPools, int256 buf) = realtimeBalanceVectorAt(token, account, time);
+        realtimeBalance = availableBalance + fromPools - buf;
+
+        buffer = uint256(buf); // upcasting to uint256 is safe
+        owedBuffer = 0;
+    }
+
+    function realtimeBalanceVectorAt(ISuperfluidToken token, address account, uint256 time)
+        public
+        view
+        returns (int256 own, int256 fromPools, int256 buffer)
+    {
+        UniversalIndexData memory universalIndexData = _getUIndexData(abi.encode(token), account);
+        BasicParticle memory uIndexParticle = _getBasicParticleFromUIndex(universalIndexData);
+
+        uint32 timeu32 = uint32(time);
+        if (_isPool(token, account)) {
+            own = ISuperfluidPool(account).getDisconnectedBalance(timeu32);
+        } else {
+            own = Value.unwrap(uIndexParticle.rtb(Time.wrap(timeu32)));
+        }
+
+        fromPools = _getBalanceFromPools(token, account, timeu32);
+
+        buffer = universalIndexData.totalBuffer.toInt256();
+    }
+
+    function _getBalanceFromPools(ISuperfluidToken token, address account, uint32 time)
+        internal
+        view
+        returns (int256 fromPools)
+    {
+        (uint32[] memory slotIds, bytes32[] memory pidList) = _listPoolConnectionIds(token, account);
+        for (uint256 i = 0; i < slotIds.length; ++i) {
+            address pool = address(uint160(uint256(pidList[i])));
+            (bool exist, PoolMemberData memory poolMemberData) =
+                _getPoolMemberData(token, account, ISuperfluidPool(pool));
+            // TODO: Do we need these asserts here? Potentially remove.
+            assert(exist);
+            assert(poolMemberData.pool == pool);
+            fromPools = fromPools + ISuperfluidPool(pool).getClaimable(account, time);
+        }
     }
 
     /// @inheritdoc IGeneralDistributionAgreementV1
@@ -204,11 +177,11 @@ contract GeneralDistributionAgreementV1 is AgreementBase, TokenMonad, IGeneralDi
         external
         view
         override
-        returns (int96)
+        returns (int96 flowRate)
     {
         bytes32 distributionFlowHash = _getFlowDistributionHash(from, to);
         (, FlowDistributionData memory data) = _getFlowDistributionData(token, distributionFlowHash);
-        return data.flowRate;
+        flowRate = data.flowRate;
     }
 
     /// @inheritdoc IGeneralDistributionAgreementV1
@@ -218,6 +191,7 @@ contract GeneralDistributionAgreementV1 is AgreementBase, TokenMonad, IGeneralDi
         ISuperfluidPool to,
         int96 requestedFlowRate
     ) external view override returns (int96 actualFlowRate, int96 totalDistributionFlowRate) {
+        // TODO: Consider renaming eff to encodedToken?, eff is ambigous
         bytes memory eff = abi.encode(token);
         bytes32 distributionFlowHash = _getFlowDistributionHash(from, to);
 
@@ -303,28 +277,26 @@ contract GeneralDistributionAgreementV1 is AgreementBase, TokenMonad, IGeneralDi
         address msgSender = currentContext.msgSender;
         newCtx = ctx;
         if (doConnect) {
-            if (!isMemberConnected(token, address(pool), msgSender)) {
-                assert(SuperfluidPool(address(pool)).operatorConnectMember(msgSender, true, uint32(block.timestamp)));
-
-                uint32 poolSlotID =
-                    _findAndFillPoolConnectionsBitmap(token, msgSender, bytes32(uint256(uint160(address(pool)))));
-
-                token.createAgreement(
-                    _getPoolMemberHash(msgSender, pool),
-                    _encodePoolMemberData(PoolMemberData({ poolID: poolSlotID, pool: address(pool) }))
-                );
-            }
+            _tryConnectMemberToPool(pool, token, msgSender);
         } else {
-            if (isMemberConnected(token, address(pool), msgSender)) {
-                assert(SuperfluidPool(address(pool)).operatorConnectMember(msgSender, false, uint32(block.timestamp)));
-                (, PoolMemberData memory poolMemberData) = _getPoolMemberData(token, msgSender, pool);
-                token.terminateAgreement(_getPoolMemberHash(msgSender, pool), 1);
-
-                _clearPoolConnectionsBitmap(token, msgSender, poolMemberData.poolID);
-            }
+            _tryDisconnectMemberFromPool(pool, token, msgSender);
         }
 
         emit PoolConnectionUpdated(token, pool, msgSender, doConnect);
+    }
+
+    function _tryConnectMemberToPool(ISuperfluidPool pool, ISuperfluidToken token, address msgSender) internal {
+        if (!isMemberConnected(token, address(pool), msgSender)) {
+            // TODO: Remove assert and add try/catch + revert
+            assert(SuperfluidPool(address(pool)).operatorConnectMember(msgSender, true, uint32(block.timestamp)));
+            uint32 poolSlotID =
+                _findAndFillPoolConnectionsBitmap(token, msgSender, bytes32(uint256(uint160(address(pool)))));
+
+            token.createAgreement(
+                _getPoolMemberHash(msgSender, pool),
+                _encodePoolMemberData(PoolMemberData({ poolID: poolSlotID, pool: address(pool) }))
+            );
+        }
     }
 
     /// @inheritdoc IGeneralDistributionAgreementV1
@@ -343,6 +315,17 @@ contract GeneralDistributionAgreementV1 is AgreementBase, TokenMonad, IGeneralDi
         return isMemberConnected(token, address(pool), member);
     }
 
+    function _tryDisconnectMemberFromPool(ISuperfluidPool pool, ISuperfluidToken token, address msgSender) internal {
+        if (isMemberConnected(token, address(pool), msgSender)) {
+            // TODO: Remove assert and add try/catch + revert
+            assert(SuperfluidPool(address(pool)).operatorConnectMember(msgSender, false, uint32(block.timestamp)));
+            (, PoolMemberData memory poolMemberData) = _getPoolMemberData(token, msgSender, pool);
+            token.terminateAgreement(_getPoolMemberHash(msgSender, pool), 1);
+
+            _clearPoolConnectionsBitmap(token, msgSender, poolMemberData.poolID);
+        }
+    }
+
     function appendIndexUpdateByPool(ISuperfluidToken token, BasicParticle memory p, Time t) external returns (bool) {
         _appendIndexUpdateByPool(abi.encode(token), msg.sender, p, t);
         return true;
@@ -358,14 +341,6 @@ contract GeneralDistributionAgreementV1 is AgreementBase, TokenMonad, IGeneralDi
         _setPoolAdjustmentFlowRate(eff, pool, true, /* doShift? */ p.flow_rate(), t);
     }
 
-    function _poolSettleClaim(bytes memory eff, address claimRecipient, Value amount) internal {
-        address token = abi.decode(eff, (address));
-        if (_isPool(ISuperfluidToken(token), msg.sender) == false) {
-            revert GDA_ONLY_SUPER_TOKEN_POOL();
-        }
-        _doShift(eff, msg.sender, claimRecipient, amount);
-    }
-
     function poolSettleClaim(ISuperfluidToken superToken, address claimRecipient, int256 amount)
         external
         returns (bool)
@@ -373,6 +348,14 @@ contract GeneralDistributionAgreementV1 is AgreementBase, TokenMonad, IGeneralDi
         bytes memory eff = abi.encode(superToken);
         _poolSettleClaim(eff, claimRecipient, Value.wrap(amount));
         return true;
+    }
+
+    function _poolSettleClaim(bytes memory eff, address claimRecipient, Value amount) internal {
+        address token = abi.decode(eff, (address));
+        if (_isPool(ISuperfluidToken(token), msg.sender) == false) {
+            revert GDA_ONLY_SUPER_TOKEN_POOL();
+        }
+        _doShift(eff, msg.sender, claimRecipient, amount);
     }
 
     /// @inheritdoc IGeneralDistributionAgreementV1
@@ -448,143 +431,66 @@ contract GeneralDistributionAgreementV1 is AgreementBase, TokenMonad, IGeneralDi
         );
 
         // handle distribute flow on behalf of someone else
-        {
-            if (from != currentContext.msgSender) {
-                if (requestedFlowRate > 0) {
-                    // @note no ACL support for now
-                    // revert if trying to distribute on behalf of others
-                    revert GDA_DISTRIBUTE_FOR_OTHERS_NOT_ALLOWED();
-                } else {
-                    // liquidation case, requestedFlowRate == 0
-                    (int256 availableBalance,,) = token.realtimeBalanceOf(from, currentContext.timestamp);
-                    // _StackVars_Liquidation used to handle good ol' stack too deep
-                    _StackVars_Liquidation memory liquidationData;
-                    {
-                        // @note it would be nice to have oldflowRate returned from _doDistributeFlow
-                        UniversalIndexData memory fromUIndexData = _getUIndexData(abi.encode(token), from);
-                        liquidationData.token = token;
-                        liquidationData.sender = from;
-                        liquidationData.liquidator = currentContext.msgSender;
-                        liquidationData.distributionFlowHash = distributionFlowHash;
-                        liquidationData.signedTotalGDADeposit = fromUIndexData.totalBuffer.toInt256();
-                        liquidationData.availableBalance = availableBalance;
-                    }
-                    // closing stream on behalf of someone else: liquidation case
-                    if (availableBalance < 0) {
-                        _makeLiquidationPayouts(liquidationData);
-                    } else {
-                        revert GDA_NON_CRITICAL_SENDER();
-                    }
-                }
-            }
-        }
+        _handleDistributeFlowNotMsgSender(currentContext, token, from, requestedFlowRate, distributionFlowHash);
 
-        {
-            _adjustBuffer(abi.encode(token), address(pool), from, distributionFlowHash, oldFlowRate, actualFlowRate);
-        }
+        _adjustBuffer(abi.encode(token), address(pool), from, distributionFlowHash, oldFlowRate, actualFlowRate);
 
         // ensure sender has enough balance to execute transaction
-        if (from == currentContext.msgSender) {
-            (int256 availableBalance,,) = token.realtimeBalanceOf(from, currentContext.timestamp);
-            // if from == msg.sender
-            if (requestedFlowRate > 0 && availableBalance < 0) {
-                revert GDA_INSUFFICIENT_BALANCE();
-            }
-        }
+        _checkIfSenderHasEnoughBalance(currentContext, token, from, requestedFlowRate);
 
         // mint/burn FlowNFT to flow distributor
-        {
-            address constantOutflowNFTAddress = _canCallConstantOutflowNFTHook(token);
+        _handleFlowDistributorNft(token, from, pool, requestedFlowRate, oldFlowRate);
 
-            if (constantOutflowNFTAddress != address(0)) {
-                uint256 gasLeftBefore;
-                // create flow (mint)
-                if (requestedFlowRate > 0 && FlowRate.unwrap(oldFlowRate) == 0) {
-                    gasLeftBefore = gasleft();
-                    try IConstantOutflowNFT(constantOutflowNFTAddress).onCreate(token, from, address(pool)) {
-                        // solhint-disable-next-line no-empty-blocks
-                    } catch {
-                        SafeGasLibrary._revertWhenOutOfGas(gasLeftBefore);
-                    }
+        (address adjustmentFlowRecipient,, int96 adjustmentFlowRate) =
+            _getPoolAdjustmentFlowInfo(abi.encode(token), address(pool));
+
+        emit FlowDistributionUpdated(
+            token,
+            pool,
+            from,
+            currentContext.msgSender,
+            int256(FlowRate.unwrap(oldFlowRate)).toInt96(),
+            int256(FlowRate.unwrap(actualFlowRate)).toInt96(),
+            int256(FlowRate.unwrap(newDistributionFlowRate)).toInt96(),
+            adjustmentFlowRecipient,
+            adjustmentFlowRate
+        );
+    }
+
+    function _handleDistributeFlowNotMsgSender(
+        ISuperfluid.Context memory ctx,
+        ISuperfluidToken token,
+        address from,
+        int96 requestedFlowRate,
+        bytes32 distributionFlowHash
+    ) internal {
+        if (from != ctx.msgSender) {
+            if (requestedFlowRate > 0) {
+                // @note no ACL support for now
+                // revert if trying to distribute on behalf of others
+                revert GDA_DISTRIBUTE_FOR_OTHERS_NOT_ALLOWED();
+            } else {
+                // liquidation case, requestedFlowRate == 0
+                (int256 availableBalance,,) = token.realtimeBalanceOf(from, ctx.timestamp);
+                // _StackVars_Liquidation used to handle good ol' stack too deep
+                _StackVars_Liquidation memory liquidationData;
+                {
+                    // @note it would be nice to have oldflowRate returned from _doDistributeFlow
+                    UniversalIndexData memory fromUIndexData = _getUIndexData(abi.encode(token), from);
+                    liquidationData.token = token;
+                    liquidationData.sender = from;
+                    liquidationData.liquidator = ctx.msgSender;
+                    liquidationData.distributionFlowHash = distributionFlowHash;
+                    liquidationData.signedTotalGDADeposit = fromUIndexData.totalBuffer.toInt256();
+                    liquidationData.availableBalance = availableBalance;
                 }
-
-                // update flow (update metadata)
-                if (requestedFlowRate > 0 && FlowRate.unwrap(oldFlowRate) > 0) {
-                    gasLeftBefore = gasleft();
-                    try IConstantOutflowNFT(constantOutflowNFTAddress).onUpdate(token, from, address(pool)) {
-                        // solhint-disable-next-line no-empty-blocks
-                    } catch {
-                        SafeGasLibrary._revertWhenOutOfGas(gasLeftBefore);
-                    }
-                }
-
-                // delete flow (burn)
-                if (requestedFlowRate == 0) {
-                    gasLeftBefore = gasleft();
-                    try IConstantOutflowNFT(constantOutflowNFTAddress).onDelete(token, from, address(pool)) {
-                        // solhint-disable-next-line no-empty-blocks
-                    } catch {
-                        SafeGasLibrary._revertWhenOutOfGas(gasLeftBefore);
-                    }
+                // closing stream on behalf of someone else: liquidation case
+                if (availableBalance < 0) {
+                    _makeLiquidationPayouts(liquidationData);
+                } else {
+                    revert GDA_NON_CRITICAL_SENDER();
                 }
             }
-        }
-
-        {
-            (address adjustmentFlowRecipient,, int96 adjustmentFlowRate) =
-                _getPoolAdjustmentFlowInfo(abi.encode(token), address(pool));
-
-            emit FlowDistributionUpdated(
-                token,
-                pool,
-                from,
-                currentContext.msgSender,
-                int256(FlowRate.unwrap(oldFlowRate)).toInt96(),
-                int256(FlowRate.unwrap(actualFlowRate)).toInt96(),
-                int256(FlowRate.unwrap(newDistributionFlowRate)).toInt96(),
-                adjustmentFlowRecipient,
-                adjustmentFlowRate
-            );
-        }
-    }
-
-    /**
-     * @notice Checks whether or not the NFT hook can be called.
-     * @dev A staticcall, so `CONSTANT_OUTFLOW_NFT` must be a view otherwise the assumption is that it reverts
-     * @param token the super token that is being streamed
-     * @return constantOutflowNFTAddress the address returned by low level call
-     */
-    function _canCallConstantOutflowNFTHook(ISuperfluidToken token)
-        internal
-        view
-        returns (address constantOutflowNFTAddress)
-    {
-        // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory data) =
-            address(token).staticcall(abi.encodeWithSelector(ISuperToken.CONSTANT_OUTFLOW_NFT.selector));
-
-        if (success) {
-            // @note We are aware this may revert if a Custom SuperToken's
-            // CONSTANT_OUTFLOW_NFT does not return data that can be
-            // decoded to an address. This would mean it was intentionally
-            // done by the creator of the Custom SuperToken logic and is
-            // fully expected to revert in that case as the author desired.
-            constantOutflowNFTAddress = abi.decode(data, (address));
-        }
-    }
-
-    function _canCallPoolAdminNFTHook(ISuperfluidToken token) internal view returns (address poolAdminNFTAddress) {
-        // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory data) =
-            address(token).staticcall(abi.encodeWithSelector(ISuperToken.POOL_ADMIN_NFT.selector));
-
-        if (success) {
-            // @note We are aware this may revert if a Custom SuperToken's
-            // POOL_ADMIN_NFT does not return data that can be
-            // decoded to an address. This would mean it was intentionally
-            // done by the creator of the Custom SuperToken logic and is
-            // fully expected to revert in that case as the author desired.
-            poolAdminNFTAddress = abi.decode(data, (address));
         }
     }
 
@@ -630,6 +536,105 @@ contract GeneralDistributionAgreementV1 is AgreementBase, TokenMonad, IGeneralDi
                 rewardAmount.toUint256(),
                 totalRewardLeft * -1
             );
+        }
+    }
+
+    function _checkIfSenderHasEnoughBalance(
+        ISuperfluid.Context memory ctx,
+        ISuperfluidToken token,
+        address from,
+        int96 requestedFlowRate
+    ) internal {
+        // ensure sender has enough balance to execute transaction
+        if (from == ctx.msgSender) {
+            (int256 availableBalance,,) = token.realtimeBalanceOf(from, ctx.timestamp);
+            // if from == msg.sender
+            if (requestedFlowRate > 0 && availableBalance < 0) {
+                revert GDA_INSUFFICIENT_BALANCE();
+            }
+        }
+    }
+
+    function _handleFlowDistributorNft(
+        ISuperfluidToken token,
+        address from,
+        ISuperfluidPool pool,
+        int96 requestedFlowRate,
+        FlowRate oldFlowRate
+    ) internal {
+        address constantOutflowNFTAddress = _canCallConstantOutflowNFTHook(token);
+
+        if (constantOutflowNFTAddress != address(0)) {
+            uint256 gasLeftBefore;
+            // create flow (mint)
+            if (requestedFlowRate > 0 && FlowRate.unwrap(oldFlowRate) == 0) {
+                gasLeftBefore = gasleft();
+                try IConstantOutflowNFT(constantOutflowNFTAddress).onCreate(token, from, address(pool)) {
+                    // solhint-disable-next-line no-empty-blocks
+                } catch {
+                    SafeGasLibrary._revertWhenOutOfGas(gasLeftBefore);
+                }
+            }
+
+            // update flow (update metadata)
+            if (requestedFlowRate > 0 && FlowRate.unwrap(oldFlowRate) > 0) {
+                gasLeftBefore = gasleft();
+                try IConstantOutflowNFT(constantOutflowNFTAddress).onUpdate(token, from, address(pool)) {
+                    // solhint-disable-next-line no-empty-blocks
+                } catch {
+                    SafeGasLibrary._revertWhenOutOfGas(gasLeftBefore);
+                }
+            }
+
+            // delete flow (burn)
+            if (requestedFlowRate == 0) {
+                gasLeftBefore = gasleft();
+                try IConstantOutflowNFT(constantOutflowNFTAddress).onDelete(token, from, address(pool)) {
+                    // solhint-disable-next-line no-empty-blocks
+                } catch {
+                    SafeGasLibrary._revertWhenOutOfGas(gasLeftBefore);
+                }
+            }
+        }
+    }
+
+    /**
+     * @notice Checks whether or not the NFT hook can be called.
+     * @dev A staticcall, so `CONSTANT_OUTFLOW_NFT` must be a view otherwise the assumption is that it reverts
+     * @param token the super token that is being streamed
+     * @return constantOutflowNFTAddress the address returned by low level call
+     */
+    function _canCallConstantOutflowNFTHook(ISuperfluidToken token)
+        internal
+        view
+        returns (address constantOutflowNFTAddress)
+    {
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, bytes memory data) =
+            address(token).staticcall(abi.encodeWithSelector(ISuperToken.CONSTANT_OUTFLOW_NFT.selector));
+
+        if (success) {
+            // @note We are aware this may revert if a Custom SuperToken's
+            // CONSTANT_OUTFLOW_NFT does not return data that can be
+            // decoded to an address. This would mean it was intentionally
+            // done by the creator of the Custom SuperToken logic and is
+            // fully expected to revert in that case as the author desired.
+            constantOutflowNFTAddress = abi.decode(data, (address));
+        }
+    }
+
+    function _canCallPoolAdminNFTHook(ISuperfluidToken token) internal view returns (address poolAdminNFTAddress) {
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, bytes memory data) =
+            address(token).staticcall(abi.encodeWithSelector(ISuperToken.POOL_ADMIN_NFT.selector));
+
+        if (success) {
+            // @note We are aware this may revert if a Custom SuperToken's
+            // POOL_ADMIN_NFT does not return data that can be
+            // decoded to an address. This would mean it was intentionally
+            // done by the creator of the Custom SuperToken logic and is
+            // fully expected to revert in that case as the author desired.
+            poolAdminNFTAddress = abi.decode(data, (address));
         }
     }
 
@@ -752,101 +757,6 @@ contract GeneralDistributionAgreementV1 is AgreementBase, TokenMonad, IGeneralDi
         int256 totalGDAOutFlowrate = signedTotalGDADeposit / liquidationPeriod.toInt256();
         // divisor cannot be zero with existing outflow
         return totalRewardLeft / totalGDAOutFlowrate > (liquidationPeriod - patricianPeriod).toInt256();
-    }
-
-    // Hash Getters
-
-    function _getPoolMemberHash(address poolMember, ISuperfluidPool pool) internal view returns (bytes32) {
-        return keccak256(abi.encode(block.chainid, "poolMember", poolMember, address(pool)));
-    }
-
-    function _getFlowDistributionHash(address from, ISuperfluidPool to) internal view returns (bytes32) {
-        return keccak256(abi.encode(block.chainid, "distributionFlow", from, to));
-    }
-
-    function _getPoolAdjustmentFlowHash(address from, address to) internal view returns (bytes32) {
-        // this will never be in conflict with other flow has types
-        return keccak256(abi.encode(block.chainid, "poolAdjustmentFlow", from, to));
-    }
-
-    // # Universal Index operations
-    //
-    // Universal Index packing:
-    // store buffer (96) and one bit to specify is pool in free
-    // -------- ------------------ ------------------ ------------------ ------------------
-    // WORD 1: |     flowRate     |     settledAt    |    totalBuffer   |      isPool      |
-    // -------- ------------------ ------------------ ------------------ ------------------
-    //         |        96b       |       32b        |       96b        |        32b       |
-    // -------- ------------------ ------------------ ------------------ ------------------
-    // WORD 2: |                                settledValue                               |
-    // -------- ------------------ ------------------ ------------------ ------------------
-    //         |                                    256b                                   |
-    // -------- ------------------ ------------------ ------------------ ------------------
-
-    function _encodeUniversalIndexData(BasicParticle memory p, uint256 buffer, bool isPool_)
-        internal
-        pure
-        returns (bytes32[] memory data)
-    {
-        data = new bytes32[](2);
-        data[0] = bytes32(
-            (uint256(int256(FlowRate.unwrap(p.flow_rate()))) << 160) | (uint256(Time.unwrap(p.settled_at())) << 128)
-                | (buffer << 32) | (isPool_ ? 1 : 0)
-        );
-        data[1] = bytes32(uint256(Value.unwrap(p._settled_value)));
-    }
-
-    function _encodeUniversalIndexData(UniversalIndexData memory uIndexData)
-        internal
-        pure
-        returns (bytes32[] memory data)
-    {
-        data = new bytes32[](2);
-        data[0] = bytes32(
-            (uint256(int256(uIndexData.flowRate)) << 160) | (uint256(uIndexData.settledAt) << 128)
-                | (uint256(uIndexData.totalBuffer) << 32) | (uIndexData.isPool ? 1 : 0)
-        );
-        data[1] = bytes32(uint256(uIndexData.settledValue));
-    }
-
-    function _decodeUniversalIndexData(bytes32[] memory data)
-        internal
-        pure
-        returns (bool exists, UniversalIndexData memory universalIndexData)
-    {
-        uint256 a = uint256(data[0]);
-        uint256 b = uint256(data[1]);
-
-        exists = a > 0 || b > 0;
-
-        if (exists) {
-            universalIndexData.flowRate = int96(int256(a >> 160) & int256(uint256(type(uint96).max)));
-            universalIndexData.settledAt = uint32(uint256(a >> 128) & uint256(type(uint32).max));
-            universalIndexData.totalBuffer = uint256(a >> 32) & uint256(type(uint96).max);
-            universalIndexData.isPool = ((a << 224) >> 224) & 1 == 1;
-            universalIndexData.settledValue = int256(b);
-        }
-    }
-
-    function _getUIndexData(bytes memory eff, address owner)
-        internal
-        view
-        returns (UniversalIndexData memory universalIndexData)
-    {
-        address token = abi.decode(eff, (address));
-        bytes32[] memory data =
-            ISuperfluidToken(token).getAgreementStateSlot(address(this), owner, _UNIVERSAL_INDEX_STATE_SLOT_ID, 2);
-        (, universalIndexData) = _decodeUniversalIndexData(data);
-    }
-
-    function _getBasicParticleFromUIndex(UniversalIndexData memory universalIndexData)
-        internal
-        pure
-        returns (BasicParticle memory particle)
-    {
-        particle._flow_rate = FlowRate.wrap(universalIndexData.flowRate);
-        particle._settled_at = Time.wrap(universalIndexData.settledAt);
-        particle._settled_value = Value.wrap(universalIndexData.settledValue);
     }
 
     // TokenMonad virtual functions
@@ -997,109 +907,5 @@ contract GeneralDistributionAgreementV1 is AgreementBase, TokenMonad, IGeneralDi
         bytes32[] memory slotData =
             token.getAgreementStateSlot(address(this), account, _UNIVERSAL_INDEX_STATE_SLOT_ID, 1);
         exists = ((uint256(slotData[0]) << 224) >> 224) & 1 == 1;
-    }
-
-    // FlowDistributionData data packing:
-    // -------- ---------- ------------- ---------- --------
-    // WORD A: | reserved | lastUpdated | flowRate | buffer |
-    // -------- ---------- ------------- ---------- --------
-    //         |    32    |      32     |    96    |   96   |
-    // -------- ---------- ------------- ---------- --------
-
-    function _encodeFlowDistributionData(FlowDistributionData memory flowDistributionData)
-        internal
-        pure
-        returns (bytes32[] memory data)
-    {
-        data = new bytes32[](1);
-        data[0] = bytes32(
-            (uint256(uint32(flowDistributionData.lastUpdated)) << 192)
-                | (uint256(uint96(flowDistributionData.flowRate)) << 96) | uint256(flowDistributionData.buffer)
-        );
-    }
-
-    function _decodeFlowDistributionData(uint256 data)
-        internal
-        pure
-        returns (bool exist, FlowDistributionData memory flowDistributionData)
-    {
-        exist = data > 0;
-        if (exist) {
-            flowDistributionData.lastUpdated = uint32((data >> 192) & uint256(type(uint32).max));
-            flowDistributionData.flowRate = int96(int256(data >> 96));
-            flowDistributionData.buffer = uint96(data & uint256(type(uint96).max));
-        }
-    }
-
-    function _getFlowDistributionData(ISuperfluidToken token, bytes32 distributionFlowHash)
-        internal
-        view
-        returns (bool exist, FlowDistributionData memory flowDistributionData)
-    {
-        bytes32[] memory data = token.getAgreementData(address(this), distributionFlowHash, 1);
-
-        (exist, flowDistributionData) = _decodeFlowDistributionData(uint256(data[0]));
-    }
-
-    // PoolMemberData data packing:
-    // -------- ---------- -------- -------------
-    // WORD A: | reserved | poolID | poolAddress |
-    // -------- ---------- -------- -------------
-    //         |    64    |   32   |     160     |
-    // -------- ---------- -------- -------------
-
-    function _encodePoolMemberData(PoolMemberData memory poolMemberData)
-        internal
-        pure
-        returns (bytes32[] memory data)
-    {
-        data = new bytes32[](1);
-        data[0] = bytes32((uint256(uint32(poolMemberData.poolID)) << 160) | uint256(uint160(poolMemberData.pool)));
-    }
-
-    function _decodePoolMemberData(uint256 data)
-        internal
-        pure
-        returns (bool exist, PoolMemberData memory poolMemberData)
-    {
-        exist = data > 0;
-        if (exist) {
-            poolMemberData.pool = address(uint160(data & uint256(type(uint160).max)));
-            poolMemberData.poolID = uint32(data >> 160);
-        }
-    }
-
-    function _getPoolMemberData(ISuperfluidToken token, address poolMember, ISuperfluidPool pool)
-        internal
-        view
-        returns (bool exist, PoolMemberData memory poolMemberData)
-    {
-        bytes32[] memory data = token.getAgreementData(address(this), _getPoolMemberHash(poolMember, pool), 1);
-
-        (exist, poolMemberData) = _decodePoolMemberData(uint256(data[0]));
-    }
-
-    // SlotsBitmap Pool Data:
-    function _findAndFillPoolConnectionsBitmap(ISuperfluidToken token, address poolMember, bytes32 poolID)
-        private
-        returns (uint32 slotId)
-    {
-        return SlotsBitmapLibrary.findEmptySlotAndFill(
-            token, poolMember, _POOL_SUBS_BITMAP_STATE_SLOT_ID, _POOL_CONNECTIONS_DATA_STATE_SLOT_ID_START, poolID
-        );
-    }
-
-    function _clearPoolConnectionsBitmap(ISuperfluidToken token, address poolMember, uint32 slotId) private {
-        SlotsBitmapLibrary.clearSlot(token, poolMember, _POOL_SUBS_BITMAP_STATE_SLOT_ID, slotId);
-    }
-
-    function _listPoolConnectionIds(ISuperfluidToken token, address subscriber)
-        private
-        view
-        returns (uint32[] memory slotIds, bytes32[] memory pidList)
-    {
-        (slotIds, pidList) = SlotsBitmapLibrary.listData(
-            token, subscriber, _POOL_SUBS_BITMAP_STATE_SLOT_ID, _POOL_CONNECTIONS_DATA_STATE_SLOT_ID_START
-        );
     }
 }
